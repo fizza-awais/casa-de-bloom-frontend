@@ -198,7 +198,7 @@ function ConfirmationContent() {
                 fullWidth
                 size="lg"
                 icon={<Home size={16} strokeWidth={2.5} />}
-                onClick={() => router.push("/register")}
+                onClick={() => router.push("/")}
               >
                 Return Home
               </Button>
