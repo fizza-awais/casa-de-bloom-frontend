@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Brand Colors — from Casa de Bloom Phase Zero README §2
+       Kiwi Green #99CC00, Pink #FF3F82, Turquoise #33C9DC, Sunshine #FFD23F */
+    --color-brand-primary: #FF3F82;   /* Pink — primary CTA color */
+    --color-brand-secondary: #99CC00; /* Kiwi Green — secondary actions */
+    --color-brand-dark: #B32B5C;      /* Deeper pink, hover/pressed states */
+    --color-brand-light: #FFE3EE;     /* Pale pink tint, disabled/subtle bg */
+    --color-brand-accent: #33C9DC;    /* Turquoise — links, accents, info */
+    --color-brand-hover: #E62E70;     /* Pink hover */
+    --color-brand-sunshine: #FFD23F;  /* Sunshine yellow — highlights, badges */
+
+    /* Status Colors */
+    --color-status-active: #99CC00;   /* Registered / confirmed */
+    --color-status-late: #FFD23F;     /* Pending / awaiting action */
+    --color-status-absent: #EF4444;   /* Cancelled / error */
+    --color-status-probation: #F97316;
+    --color-status-info: #33C9DC;
+
+    /* Neutrals / UI */
+    --color-ui-border: #E2E8F0;
+    --color-ui-card: #FFFFFF;
+    --color-ui-bg-page: #FFF8FB;      /* warm off-white, pool-party feel */
+    --color-ui-text-main: #1F1B24;
+    --color-ui-text-muted: #6B7280;
+
+    /* Danger (used directly by Button.tsx as bg-danger-500/600) */
+    --color-danger-500: #EF4444;
+    --color-danger-600: #DC2626;
+
+    /* Semantic mappings */
+    --status-absent: var(--color-status-absent);
+
+    /* Font */
+    --font-poppins: "Poppins", sans-serif;
+  }
+}
+
+@theme inline {
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-secondary: var(--color-brand-secondary);
+  --color-brand-dark: var(--color-brand-dark);
+  --color-brand-light: var(--color-brand-light);
+  --color-brand-accent: var(--color-brand-accent);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-brand-sunshine: var(--color-brand-sunshine);
+
+  --color-status-active: var(--color-status-active);
+  --color-status-late: var(--color-status-late);
+  --color-status-absent: var(--color-status-absent);
+  --color-status-probation: var(--color-status-probation);
+  --color-status-info: var(--color-status-info);
+
+  --color-ui-border: var(--color-ui-border);
+  --color-ui-card: var(--color-ui-card);
+  --color-ui-bg-page: var(--color-ui-bg-page);
+  --color-ui-text-main: var(--color-ui-text-main);
+  --color-ui-text-muted: var(--color-ui-text-muted);
+
+  --color-danger-500: var(--color-danger-500);
+  --color-danger-600: var(--color-danger-600);
+
+  --font-sans: var(--font-poppins);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-poppins);
+  background: linear-gradient(180deg, var(--color-ui-bg-page) 0%, #FFF0F6 60%, #E9FBFA 100%);
+  color: var(--color-ui-text-main);
+}
+
+/* Custom scrollbar for sidebars and panels */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-ui-border);
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ui-text-muted);
+}
+
+/* Base styles for forms and cards */
+.bg-ui-card {
+  background-color: var(--color-ui-card);
+}
+
+.border-ui-border {
+  border-color: var(--color-ui-border);
+}
+
+/* Remove default focus rings where custom rings are used */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+}
