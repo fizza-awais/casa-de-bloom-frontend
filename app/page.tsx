@@ -1,65 +1,78 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Sparkles, HeartHandshake } from "lucide-react";
+import Button from "@/components/ui/Button";
+
+export default function RegisterLandingPage() {
+  const router = useRouter();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <main className="relative min-h-screen w-full flex flex-col items-center justify-center font-sans selection:bg-brand-primary/20 overflow-x-hidden px-4 py-8 md:py-12">
+      
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
+          src="/assets/images/bg_image.png"
+          alt="Casa de Bloom Event Vibe backdrop"
+          fill
           priority
+          className="object-cover object-center pointer-events-none brightness-[0.8] scale-105"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        <div className="absolute inset-0 bg-transparent">
+          <div className="absolute -top-1/4 -left-1/4 w-[80%] h-[80%] rounded-full bg-brand-light/40 blur-[130px]" />
+          
+          <div className="absolute -bottom-1/4 -right-1/4 w-[75%] h-[75%] rounded-full bg-brand-accent/10 blur-[120px]" />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Depth & Contrast Vignette */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/35 mix-blend-multiply" />
+      </div>
+
+      {/* --- REGISTRATION CARD --- */}
+      <div className="relative z-10 w-full max-w-[420px] bg-white/75 backdrop-blur-xl rounded-[28px] p-6 md:p-8 text-center shadow-[0_24px_50px_rgba(31,27,36,0.12)] border border-white/60">
+        
+        {/* Context Tag using Casa de Bloom "Sunshine" Highlight */}
+        <span className="text-[11px] font-bold text-ui-text-main uppercase tracking-widest bg-brand-sunshine px-3 py-1 rounded-full inline-block mb-4 shadow-sm">
+          Join the Bloom
+        </span>
+        
+        <h1 className="text-base md:text-[18px] font-semibold text-ui-text-main tracking-tight mb-6">
+          How would you like to participate?
+        </h1>
+
+        <div className="space-y-3">
+          
+          <Button
+            variant="primary"
+            size="md"
+            rounded="xl"
+            fullWidth
+            icon={<Sparkles size={16} strokeWidth={2.5} />}
+            onClick={() => router.push("/register/guest")}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Join as a Guest
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="md"
+            rounded="xl"
+            fullWidth
+            icon={<HeartHandshake size={16} strokeWidth={2.5} />}
+            onClick={() => router.push("/register/volunteer")}
           >
-            Documentation
-          </a>
+            Volunteer
+          </Button>
+          
         </div>
-      </main>
-    </div>
+      </div>
+      <div className="relative z-10 mt-8 text-center text-white/90 drop-shadow-md pointer-events-none">
+        <p className="font-serif italic text-base md:text-lg opacity-90 tracking-wide">
+          “Where connections become opportunities.”
+        </p>
+      </div>
+    </main>
   );
 }
