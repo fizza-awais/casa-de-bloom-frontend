@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Suspense, useState, useRef } from "react";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { Info } from "lucide-react";
 
@@ -30,34 +30,13 @@ const QR_METHODS = [
   },
 ];
 
-function DonationContent() {
-  const params = useSearchParams();
+export default function DonationPage() {
   const router = useRouter();
   const supportSectionRef = useRef<HTMLDivElement>(null);
-
-  const invitationNumber = params.get("invitationNumber") ?? "";
-  const cbId = params.get("cbId") ?? "";
-  const name = params.get("name") ?? "";
-  const eventDate = params.get("eventDate") ?? "";
-  const participantType = params.get("participantType") ?? "";
-  const recordType = params.get("recordType") ?? "";
-  const recordId = params.get("recordId") ?? "";
-
   const [selectedMethod, setSelectedMethod] = useState<"venmo" | "zelle" | "paypal" | null>("venmo");
 
   const handleContinue = () => {
-    const query = new URLSearchParams({
-      invitationNumber,
-      cbId,
-      name,
-      eventDate,
-      participantType,
-      recordType,
-      recordId,
-      registrationId: params.get("registrationId") ?? "",
-      volunteerId: params.get("volunteerId") ?? "",
-    });
-    router.push(`/register/confirmation?${query.toString()}`);
+    router.push("/register/confirmation");
   };
 
   const scrollToSupport = () => {
@@ -69,8 +48,7 @@ function DonationContent() {
   return (
     <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-12">
       
-      {/* Background System */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
+      {/* <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
           src="/assets/images/bg_image.png"
           alt="Casa de Bloom Event Vibe backdrop"
@@ -83,7 +61,7 @@ function DonationContent() {
           <div className="absolute -bottom-1/4 -right-1/4 w-[75%] h-[75%] rounded-full bg-brand-accent/10 blur-[120px]" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/35 mix-blend-multiply" />
-      </div>
+      </div> */}
 
       <div className="relative z-10 w-full max-w-2xl">
         <div className="bg-white/88 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 shadow-[0_32px_64px_rgba(31,27,36,0.18)] border border-white/70 space-y-8">
@@ -218,19 +196,5 @@ function DonationContent() {
         </div>
       </div>
     </main>
-  );
-}
-
-export default function DonationPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full border-4 border-brand-primary border-t-transparent animate-spin" />
-        </div>
-      }
-    >
-      <DonationContent />
-    </Suspense>
   );
 }

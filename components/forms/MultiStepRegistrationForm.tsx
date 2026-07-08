@@ -4,14 +4,14 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
-import { AlertCircle, ArrowLeft, Check, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import ComplianceStep from "./ComplianceStep";
 import { registerMember, RegisterPayload } from "@/lib/services/register";
 
 export interface FormField {
   name: string;
   label: string;
-  type: "text" | "email" | "tel" | "url" | "select" | "textarea" | "toggle";
+  type: "text" | "email" | "tel" | "url" | "password" | "select" | "textarea" | "toggle";
   required?: boolean;
   colSpan?: 1 | 2;
   placeholder?: string;
@@ -61,14 +61,17 @@ export default function MultiStepRegistrationForm({
   onSubmit,
 }: MultiStepRegistrationFormProps) {
   const router = useRouter();
-
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+  
   // Full step sequence: custom steps → compliance → submit
   const allSteps = [...steps, COMPLIANCE_STEP];
 
   const [formData, setFormData] = useState<Record<string, any>>({
-    guidelinesAccepted: false,
-    ageConfirmed: false,
+    isRealityShow: false,
     photoReleaseAccepted: false,
+    positiveExperience: false,
+    ageConfirmed: false,
+    guidelinesAccepted: false,
     ...initialFormData,
   });
 
@@ -92,12 +95,16 @@ export default function MultiStepRegistrationForm({
     let errs: Record<string, string> = {};
 
     if (key === "compliance") {
-      if (!formData.guidelinesAccepted)
-        errs.guidelinesAccepted = "You must scroll through and accept the guidelines.";
-      if (!formData.ageConfirmed)
-        errs.ageConfirmed = "Age confirmation is required.";
+      if (!formData.isRealityShow)
+        errs.isRealityShow = "You must confirm you understand Casa de Bloom is a community-centered Reality Show.";
       if (!formData.photoReleaseAccepted)
-        errs.photoReleaseAccepted = "Photo/media release is required.";
+        errs.photoReleaseAccepted = "You must confirm you understand photos and videos will be taken.";
+      if (!formData.positiveExperience)
+        errs.positiveExperience = "You must agree to help create a positive experience for everyone.";
+      if (!formData.ageConfirmed)
+        errs.ageConfirmed = "You must confirm you are at least 21 years old.";
+      if (!formData.guidelinesAccepted)
+        errs.guidelinesAccepted = "You must confirm you have read the Community Guidelines & Terms.";
     } else {
       const stepObj = steps.find((s) => s.key === key);
       if (stepObj) {
@@ -128,7 +135,8 @@ export default function MultiStepRegistrationForm({
       first_name: formData.firstName ?? "",
       last_name: formData.lastName ?? "",
       email: formData.email ?? "",
-      phone: formData.phone ?? "",
+      phone: formData.phone || undefined,
+      password: formData.password || undefined,
       facebook: formData.facebook || undefined,
       instagram: formData.instagram || undefined,
       linkedin: formData.linkedin || undefined,
@@ -189,19 +197,16 @@ export default function MultiStepRegistrationForm({
       const payload = buildPayload();
       const result = await registerMember(payload);
 
-      const params = new URLSearchParams({
+      // Build confirmation URL with registration details
+      const query = new URLSearchParams({
         invitationNumber: result.invitation_number,
         cbId: result.cb_id,
-        name: `${formData.firstName} ${formData.lastName}`,
-        eventDate: formData.eventDate ?? "",
+        name: `${formData.firstName ?? ""} ${formData.lastName ?? ""}`.trim(),
         participantType: result.participant_type,
         recordType: result.record_type,
         recordId: result.record_id,
-        memberId: result.member_id ?? "",
-        registrationId: result.registration_id ?? "",
-        volunteerId: result.volunteer_id ?? "",
       });
-      router.push(`/register/donation?${params.toString()}`);
+      router.push(`/register/confirmation?${query.toString()}`);
     } catch (err: any) {
       setApiError(err?.message ?? "Something went wrong. Please try again.");
       document.getElementById("api-error")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -218,7 +223,13 @@ export default function MultiStepRegistrationForm({
 
   const isStepValid = (key: string): boolean => {
     if (key === "compliance") {
-      return !!formData.guidelinesAccepted && !!formData.ageConfirmed && !!formData.photoReleaseAccepted;
+      return (
+        !!formData.isRealityShow &&
+        !!formData.photoReleaseAccepted &&
+        !!formData.positiveExperience &&
+        !!formData.ageConfirmed &&
+        !!formData.guidelinesAccepted
+      );
     }
 
     const stepObj = steps.find((s) => s.key === key);
@@ -317,6 +328,38 @@ export default function MultiStepRegistrationForm({
             </div>
           </div>
         );
+      case "password": {
+        const isVisible = !!visiblePasswords[field.name];
+        return (
+          <div className={fieldGroupClass}>
+            <input
+              type={isVisible ? "text" : "password"}
+              id={field.name}
+              placeholder=" "
+              value={formData[field.name] || ""}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              className={inputClass}
+            />
+            <label htmlFor={field.name} className={labelClass}>
+              {field.label} {field.required ? "*" : ""}
+            </label>
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() =>
+                setVisiblePasswords((prev) => ({
+                  ...prev,
+                  [field.name]: !prev[field.name],
+                }))
+              }
+              className="w-4 h-4 text-ui-text-muted absolute right-1 bottom-1.5 hover:text-brand-primary transition-colors flex items-center justify-center"
+              aria-label={isVisible ? "Hide password" : "Show password"}
+            >
+              {isVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
+        );
+      }
       default:
         return (
           <div className={fieldGroupClass}>
@@ -565,7 +608,7 @@ export default function MultiStepRegistrationForm({
                           Submitting…
                         </span>
                       ) : isLastStep ? (
-                        "Complete Registration"
+                        "I'm Ready for Casa de Bloom"
                       ) : (
                         "Continue"
                       )}

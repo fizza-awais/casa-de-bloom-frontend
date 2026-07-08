@@ -1,177 +1,138 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Mail, User, Phone, Globe, Briefcase, MapPin, Calendar } from "lucide-react";
+import { Mail, User, Calendar, Lock } from "lucide-react";
 import MultiStepRegistrationForm, { CustomStep } from "@/components/forms/MultiStepRegistrationForm";
 import { fetchEvents, formatEventOption, EventOption } from "@/lib/services/events";
+import { fetchMemberMe } from "@/lib/services/auth";
 
 const INITIAL_FORM_DATA = {
   eventDate: "",
   firstName: "",
   lastName: "",
   email: "",
-  phone: "",
-  facebook: "",
-  instagram: "",
-  linkedin: "",
-  website: "",
-  profession: "",
-  businessName: "",
-  city: "",
+  password: "",
   ageRange: "",
   gender: "",
+  attendanceMode: "",
   hearAboutUs: "",
   whyAttend: "",
-  attendanceMode: "",
-  emergencyContact: "",
-  foodAllergies: "",
   communityGrill: "",
   spreadTheWord: false,
 };
 
-function buildGuestSteps(eventOptions: EventOption[]): CustomStep[] {
-  return [
+function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean): CustomStep[] {
+  const step1Fields: CustomStep["fields"] = [
     {
-      key: "identity",
-      label: "Identity",
-      img: "/assets/images/beautiful-lilies-with-pink-background.jpeg",
-      fields: [
-        {
-          name: "eventDate",
-          label: "Targeted Event",
-          type: "select",
-          required: true,
-          colSpan: 2,
-          options: eventOptions,
-          placeholder: eventOptions.length ? "-- Choose an upcoming event --" : "Loading events...",
-          icon: <Calendar size={16} />,
-          requiredMessage: "Event selection is required.",
-        },
-        {
-          name: "firstName",
-          label: "First Name",
-          type: "text",
-          required: true,
-          colSpan: 1,
-          icon: <User size={16} />,
-          requiredMessage: "First name is required.",
-        },
-        {
-          name: "lastName",
-          label: "Last Name",
-          type: "text",
-          required: true,
-          colSpan: 1,
-          icon: <User size={16} />,
-          requiredMessage: "Last name is required.",
-        },
-        {
-          name: "email",
-          label: "Email Address",
-          type: "email",
-          required: true,
-          colSpan: 1,
-          icon: <Mail size={16} />,
-          requiredMessage: "Valid email is required.",
-          invalidMessage: "Valid email is required.",
-        },
-        {
-          name: "phone",
-          label: "Phone Number",
-          type: "tel",
-          required: true,
-          colSpan: 1,
-          icon: <Phone size={16} />,
-          requiredMessage: "Phone number is required.",
-        },
-      ],
+      name: "eventDate",
+      label: "Targeted Event",
+      type: "select",
+      required: true,
+      colSpan: 2,
+      options: eventOptions,
+      placeholder: eventOptions.length ? "-- Choose an upcoming event --" : "Loading events...",
+      icon: <Calendar size={16} />,
+      requiredMessage: "Event selection is required.",
     },
     {
-      key: "profile",
-      label: "Demographic Matrix",
-      img: "/assets/images/close-up-homemade-therapy-salt-spa.jpeg",
+      name: "firstName",
+      label: "First Name",
+      type: "text",
+      required: true,
+      colSpan: 1,
+      icon: <User size={16} />,
+      requiredMessage: "First name is required.",
+    },
+    {
+      name: "lastName",
+      label: "Last Name",
+      type: "text",
+      required: true,
+      colSpan: 1,
+      icon: <User size={16} />,
+      requiredMessage: "Last name is required.",
+    },
+    {
+      name: "email",
+      label: "Email Address",
+      type: "email",
+      required: true,
+      colSpan: 2,
+      icon: <Mail size={16} />,
+      placeholder: "you@example.com",
+      requiredMessage: "Valid email is required.",
+      invalidMessage: "Valid email is required.",
+    },
+  ];
+
+  // Password only for new users — placed immediately after email
+  if (!isReturningUser) {
+    step1Fields.push({
+      name: "password",
+      label: "Create Password",
+      type: "password",
+      required: true,
+      colSpan: 2,
+      icon: <Lock size={16} />,
+      requiredMessage: "Password is required for registration.",
+    });
+  }
+
+  // Age Range + Gender always last in step 1
+  step1Fields.push(
+    {
+      name: "ageRange",
+      label: "Age Range",
+      type: "select",
+      required: true,
+      colSpan: 1,
+      placeholder: "Select Age Bracket",
+      options: [
+        { label: "21-29", value: "21-29" },
+        { label: "30-39", value: "30-39" },
+        { label: "40-49", value: "40-49" },
+        { label: "50-59", value: "50-59" },
+        { label: "60-69", value: "60-69" },
+        { label: "70+", value: "70+" },
+      ],
+      requiredMessage: "Age bracket selection is required.",
+    },
+    {
+      name: "gender",
+      label: "Gender",
+      type: "select",
+      required: true,
+      colSpan: 1,
+      placeholder: "Select Gender",
+      options: [
+        { label: "Female", value: "Female" },
+        { label: "Male", value: "Male" },
+        { label: "Non-Binary", value: "Non-Binary" },
+        { label: "Prefer not to say", value: "Prefer not to say" },
+      ],
+      requiredMessage: "Gender declaration is mandatory.",
+    }
+  );
+
+  const steps: CustomStep[] = [
+    {
+      key: "identity",
+      label: "Identity & Demographics",
+      img: "/assets/images/beautiful-lilies-with-pink-background.jpeg",
+      fields: step1Fields,
+    },
+    {
+      key: "community",
+      label: "Community Details",
+      img: "/assets/images/high-angle-gua-sha-sleep-mask-arrangement.jpeg",
       fields: [
-        {
-          name: "facebook",
-          label: "Facebook Handle",
-          type: "text",
-          colSpan: 1,
-        },
-        {
-          name: "instagram",
-          label: "Instagram Handle",
-          type: "text",
-          colSpan: 1,
-        },
-        {
-          name: "linkedin",
-          label: "LinkedIn URL",
-          type: "text",
-          colSpan: 1,
-        },
-        {
-          name: "website",
-          label: "Personal Website",
-          type: "url",
-          colSpan: 1,
-          icon: <Globe size={16} />,
-        },
-        {
-          name: "profession",
-          label: "Profession",
-          type: "text",
-          colSpan: 1,
-          icon: <Briefcase size={16} />,
-          requiredMessage: "Profession is required.",
-        },
-        {
-          name: "businessName",
-          label: "Business Name (Optional)",
-          type: "text",
-          colSpan: 1,
-        },
-        {
-          name: "city",
-          label: "City",
-          type: "text",
-          colSpan: 1,
-          icon: <MapPin size={16} />,
-          requiredMessage: "City is required.",
-        },
-        {
-          name: "ageRange",
-          label: "Age Range",
-          type: "select",
-          colSpan: 1,
-          placeholder: "Select Age Bracket",
-          options: [
-            { label: "21-25", value: "21-25" },
-            { label: "26-34", value: "26-34" },
-            { label: "35-45", value: "35-45" },
-            { label: "46+", value: "46+" },
-          ],
-          requiredMessage: "Age bracket selection is required.",
-        },
-        {
-          name: "gender",
-          label: "Gender",
-          type: "select",
-          required: true,
-          colSpan: 1,
-          placeholder: "Select Gender",
-          options: [
-            { label: "Female", value: "Female" },
-            { label: "Male", value: "Male" },
-            { label: "Non-Binary", value: "Non-Binary" },
-          ],
-          requiredMessage: "Gender declaration is mandatory.",
-        },
         {
           name: "attendanceMode",
           label: "Attending Layout Status",
           type: "select",
-          colSpan: 1,
-          placeholder: "Composition Selection",
+          required: true,
+          colSpan: 2,
+          placeholder: "Select Attendance Composition",
           options: [
             { label: "Attending Alone", value: "alone" },
             { label: "With a Partner", value: "partner" },
@@ -179,13 +140,6 @@ function buildGuestSteps(eventOptions: EventOption[]): CustomStep[] {
           ],
           requiredMessage: "Please select attendance composition.",
         },
-      ],
-    },
-    {
-      key: "details",
-      label: "Community Details",
-      img: "/assets/images/high-angle-gua-sha-sleep-mask-arrangement.jpeg",
-      fields: [
         {
           name: "hearAboutUs",
           label: "How did you hear about Casa de Bloom?",
@@ -197,20 +151,6 @@ function buildGuestSteps(eventOptions: EventOption[]): CustomStep[] {
           label: "Why would you like to attend?",
           type: "textarea",
           colSpan: 2,
-        },
-        {
-          name: "emergencyContact",
-          label: "Emergency Contact",
-          type: "text",
-          colSpan: 1,
-          icon: <Phone size={16} />,
-          requiredMessage: "Emergency contact is required.",
-        },
-        {
-          name: "foodAllergies",
-          label: "Dietary Restrictions",
-          type: "text",
-          colSpan: 1,
         },
         {
           name: "communityGrill",
@@ -227,36 +167,64 @@ function buildGuestSteps(eventOptions: EventOption[]): CustomStep[] {
       ],
     },
   ];
+
+  return steps;
 }
 
 export default function GuestRegistration() {
   const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [isReturningUser, setIsReturningUser] = useState(false);
+  const [initialData, setInitialData] = useState<Record<string, any>>(INITIAL_FORM_DATA);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
-    const loadEvents = async () => {
+    const loadData = async () => {
       try {
         const events = await fetchEvents();
         if (active) {
           setEventOptions(events.map(formatEventOption));
         }
-      } catch {
+
+        // Check if returning user
+        const profile = await fetchMemberMe();
+        if (active && profile) {
+          setIsReturningUser(true);
+          const latestReg = profile.registrations?.[0] || {};
+          setInitialData({
+            eventDate: "", // Always select new event
+            firstName: profile.first_name || "",
+            lastName: profile.last_name || "",
+            email: profile.email || "",
+            password: "", // Not needed for returning user registration
+            ageRange: profile.age_range || "",
+            gender: profile.gender || "",
+            attendanceMode: latestReg.attending_as || "",
+            hearAboutUs: latestReg.how_heard || "",
+            whyAttend: latestReg.why_attend || "",
+            communityGrill: latestReg.bringing_to_grill || "",
+            spreadTheWord: latestReg.willing_to_share_social || false,
+          });
+        }
+      } catch (err) {
+        console.error("Data load failed:", err);
+      } finally {
         if (active) {
-          setEventsError("We could not load the event list right now.");
+          setIsLoading(false);
         }
       }
     };
 
-    loadEvents();
+    loadData();
 
     return () => {
       active = false;
     };
   }, []);
 
-  const steps = useMemo(() => buildGuestSteps(eventOptions), [eventOptions]);
+  const steps = useMemo(() => buildGuestSteps(eventOptions, isReturningUser), [eventOptions, isReturningUser]);
 
   if (eventsError) {
     return (
@@ -269,12 +237,24 @@ export default function GuestRegistration() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm font-semibold text-ui-text-muted">Loading registration details...</span>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <MultiStepRegistrationForm
+      key={isReturningUser ? "returning" : "new"}
       title="Guest Registration"
       participantType="guest"
       steps={steps}
-      initialFormData={INITIAL_FORM_DATA}
+      initialFormData={initialData}
     />
   );
 }

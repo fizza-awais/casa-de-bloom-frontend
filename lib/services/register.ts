@@ -5,7 +5,8 @@ export interface RegisterPayload {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone?: string;
+  password?: string;
   facebook?: string;
   instagram?: string;
   linkedin?: string;
@@ -110,6 +111,7 @@ export async function registerMember(payload: RegisterPayload): Promise<Register
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify(payload),
   });
 
