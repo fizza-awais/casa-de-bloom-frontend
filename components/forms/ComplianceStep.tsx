@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import type { RegistrationFormData, RegistrationFormValue } from "./MultiStepRegistrationForm";
 
 interface ComplianceStepProps {
-  formData: Record<string, any>;
+  formData: RegistrationFormData;
   errors: Record<string, string>;
-  onFieldChange: (name: string, value: any) => void;
+  onFieldChange: (name: string, value: RegistrationFormValue) => void;
 }
 
 const CHECKBOX_ITEMS = [
@@ -62,8 +63,29 @@ export default function ComplianceStep({
         </p>
       </div>
 
-      <div className="space-y-4 pt-4 border-t border-ui-border">
-        <label className="flex items-start gap-3 rounded-xl border border-brand-primary/20 bg-brand-light/20 p-3 text-sm font-bold text-ui-text-main cursor-pointer select-none">
+      <div className="space-y-3 border-t border-ui-border pt-4">
+        <div className="space-y-3">
+          {CHECKBOX_ITEMS.map((item) => (
+            <div key={item.id}>
+              <label className="flex items-start gap-3 text-sm font-medium text-ui-text-main cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={!!formData[item.id]}
+                  onChange={(e) => onFieldChange(item.id, e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded accent-brand-primary"
+                />
+                <span>{item.label}</span>
+              </label>
+              {errors[item.id] && (
+                <p className="mt-1 pl-7 text-left text-xs font-medium text-danger-500">
+                  {errors[item.id]}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <label className="flex cursor-pointer select-none items-start gap-3 border-t border-ui-border pt-3 text-sm font-semibold text-ui-text-main">
           <input
             type="checkbox"
             checked={allChecked}
@@ -72,25 +94,6 @@ export default function ComplianceStep({
           />
           <span>Accept all</span>
         </label>
-
-        {CHECKBOX_ITEMS.map((item) => (
-          <div key={item.id}>
-            <label className="flex items-start gap-3 text-sm font-medium text-ui-text-main cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={!!formData[item.id]}
-                onChange={(e) => onFieldChange(item.id, e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded accent-brand-primary"
-              />
-              <span>{item.label}</span>
-            </label>
-            {errors[item.id] && (
-              <p className="mt-1 pl-7 text-left text-xs font-medium text-danger-500">
-                {errors[item.id]}
-              </p>
-            )}
-          </div>
-        ))}
       </div>
     </div>
   );
