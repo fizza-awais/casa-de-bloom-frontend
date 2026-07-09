@@ -7,7 +7,9 @@ import Button from "@/components/ui/Button";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import ComplianceStep from "./ComplianceStep";
 import {
+  checkRegistrationEmail,
   registerMember,
+  RegistrationCheckError,
   RegisterPayload,
   RegisterResponse,
 } from "@/lib/services/register";
@@ -124,6 +126,13 @@ export default function MultiStepRegistrationForm({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [hasAttemptedContinue, setHasAttemptedContinue] = useState(false);
+  const [checkedEmail, setCheckedEmail] = useState<{
+    email: string;
+    eventDate: string;
+    emailExists: boolean;
+    isRegistered: boolean;
+  } | null>(null);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -188,6 +197,10 @@ export default function MultiStepRegistrationForm({
   };
 
   const handleFieldChange = (name: string, value: RegistrationFormValue) => {
+    if (name === "email" || name === "eventDate") {
+      setCheckedEmail(null);
+    }
+
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -288,6 +301,71 @@ export default function MultiStepRegistrationForm({
     return Object.keys(errs).length === 0;
   };
 
+  const validateStepWithPreflight = async (key: string): Promise<boolean> => {
+    const isValid = validateStep(key);
+    if (!isValid) return false;
+
+    const stepObj = steps.find((s) => s.key === key);
+    const hasEmailField = stepObj?.fields.some((field) => field.name === "email");
+    const hasPasswordField = stepObj?.fields.some((field) => field.name === "password");
+    const email = getStringValue("email").trim().toLowerCase();
+    const eventDate = getStringValue("eventDate").trim();
+
+    if (!hasEmailField || !hasPasswordField || !email || !eventDate) return true;
+
+    if (checkedEmail?.email === email && checkedEmail.eventDate === eventDate) {
+      if (!checkedEmail.emailExists && !checkedEmail.isRegistered) return true;
+
+      setErrors((prev) => ({
+        ...prev,
+        email: checkedEmail.isRegistered
+          ? "This email already has an account. Please log in or use a different email."
+          : "This email already has an account. Please log in or use a different email.",
+      }));
+      return false;
+    }
+
+    setIsCheckingEmail(true);
+    try {
+      const result = await checkRegistrationEmail(email, eventDate, participantType);
+      setCheckedEmail({
+        email,
+        eventDate,
+        emailExists: result.emailExists,
+        isRegistered: result.isRegistered,
+      });
+
+      if (result.isRegistered || result.emailExists) {
+        setErrors((prev) => ({
+          ...prev,
+          email: result.isRegistered
+            ? "This email already has an account. Please log in or use a different email."
+            : "This email already has an account. Please log in or use a different email.",
+        }));
+        return false;
+      }
+
+      setErrors((prev) => {
+        const nextErrors = { ...prev };
+        delete nextErrors.email;
+        return nextErrors;
+      });
+      return true;
+    } catch (err: unknown) {
+      const field = err instanceof RegistrationCheckError && err.field ? err.field : "email";
+      setErrors((prev) => ({
+        ...prev,
+        [field]:
+          err instanceof Error
+            ? err.message
+            : "Unable to check registration availability right now. Please try again.",
+      }));
+      return false;
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
   const buildPayload = (): RegisterPayload => {
     const exactAge = getStringValue("exactAge");
     const base: RegisterPayload = {
@@ -337,10 +415,12 @@ export default function MultiStepRegistrationForm({
     setApiError(null);
     const currentKey = allSteps[currentIndex].key;
 
-    if (!validateStep(currentKey)) {
-      document
-        .getElementById("form-errors")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!(await validateStepWithPreflight(currentKey))) {
+      window.requestAnimationFrame(() => {
+        document
+          .getElementById("form-errors")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
       return;
     }
 
@@ -600,7 +680,7 @@ export default function MultiStepRegistrationForm({
   const currentKey = allSteps[currentIndex].key;
   const isLastStep = currentIndex === allSteps.length - 1;
   const isCurrentStepValid = isStepValid(currentKey);
-  const isContinueDisabled = isSubmitting;
+  const isContinueDisabled = isSubmitting || isCheckingEmail;
   const showValidationPrompt =
     hasAttemptedContinue && !isCurrentStepValid && errorList.length === 0;
   const validationPrompt =
@@ -784,10 +864,10 @@ export default function MultiStepRegistrationForm({
                       : undefined
                   }
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isCheckingEmail ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 size={16} className="animate-spin" />
-                      Submitting…
+                      {isCheckingEmail ? "Checking email..." : "Submitting…"}
                     </span>
                   ) : isLastStep ? (
                     "I'm Ready for Casa de Bloom."

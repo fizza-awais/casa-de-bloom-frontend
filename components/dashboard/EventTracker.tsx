@@ -20,6 +20,12 @@ interface EventDetail {
   created_at: string;
 }
 
+interface MemberDetail {
+  cb_id?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
 interface Registration {
   id: string;
   invitation_number: string;
@@ -33,7 +39,7 @@ interface Registration {
   status: string;
   created_at: string;
   event_detail?: EventDetail;
-  member_detail?: any;
+  member_detail?: MemberDetail;
 }
 
 interface EventTrackerProps {
@@ -109,7 +115,7 @@ function RegistrationCard({
   return (
     <Link
       href={confirmationHref}
-      className="group flex items-center gap-4 rounded-2xl border border-ui-border bg-white/70 backdrop-blur-sm shadow-sm p-5 transition-all duration-200 hover:shadow-md hover:border-brand-primary/30 hover:bg-white/90"
+      className="group flex items-center gap-4 rounded-2xl border border-ui-border bg-white/70 backdrop-blur-sm shadow-sm p-4 transition-all duration-200 hover:shadow-md hover:border-brand-primary/30 hover:bg-white/90"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* Calendar icon */}
@@ -163,8 +169,8 @@ export default function EventTracker({ registrations, volunteerDetails }: EventT
   );
 
   return (
-    <div className="w-full bg-white/70 backdrop-blur-md border border-ui-border rounded-3xl p-6 md:p-8 shadow-sm">
-      <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-3xl border border-ui-border bg-white/70 p-5 shadow-sm backdrop-blur-md md:p-6">
+      <div className="mb-4 flex shrink-0 items-center justify-between gap-4">
         <div>
           <h3 className="text-lg font-bold text-ui-text-main flex items-center gap-2">
             <CalendarDays className="text-brand-accent" size={20} />
@@ -194,7 +200,7 @@ export default function EventTracker({ registrations, volunteerDetails }: EventT
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 custom-scrollbar">
           {sorted.map((reg, i) => (
             <RegistrationCard key={reg.id} reg={reg} index={i} recordType={reg._recordType} />
           ))}

@@ -22,11 +22,11 @@ export default async function DashboardLayout({
 
   return (
     <DashboardProvider profile={profile}>
-      <div className="min-h-screen bg-ui-bg-page flex flex-col lg:flex-row gap-6 p-4 md:p-6 lg:p-8">
+      <div className="min-h-dvh bg-ui-bg-page flex flex-col gap-6 p-4 md:p-6 lg:h-dvh lg:flex-row lg:p-4 xl:p-6">
         {/* Sidebar uses its own internal DEFAULT_NAV — no icon props crossing the server/client boundary */}
         <Sidebar role={profile.participant_type} />
 
-        <div className="flex-1 w-full max-w-7xl mx-auto space-y-6">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 w-full max-w-7xl mx-auto">
           <DashboardNav
             firstName={profile.first_name}
             lastName={profile.last_name}
