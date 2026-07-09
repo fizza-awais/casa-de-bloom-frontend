@@ -15,6 +15,7 @@ export interface MemberProfile {
   business_name: string;
   city: string;
   age_range: string;
+  exact_age: number | null;
   gender: string;
   participant_type: "guest" | "volunteer";
   consents: any[];
@@ -151,9 +152,9 @@ export async function logout(): Promise<void> {
   try {
     await fetch(`${API_URL}/api/auth/logout/`, {
       method: "POST",
+      credentials: "include",
     });
   } catch (err) {
     console.error("Logout failed:", err);
   }
 }
-

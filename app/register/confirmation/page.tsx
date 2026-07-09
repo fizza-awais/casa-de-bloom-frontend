@@ -10,6 +10,9 @@ import {
   Mail,
   Home,
   AlertCircle,
+  Download,
+  User,
+  Phone,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import {
@@ -19,8 +22,9 @@ import {
 } from "@/lib/services/register";
 import { verifyToken } from "@/lib/services/auth";
 import { formatEventDate } from "@/lib/date";
+import { downloadInvitationPdf } from "@/lib/downloadInvitationPdf";
 
-function ConfirmationContent() {
+export function ConfirmationContent() {
   const params = useSearchParams();
   const router = useRouter();
 
@@ -44,14 +48,10 @@ function ConfirmationContent() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── Refresh guard ─────────────────────────────────────────────────────────
-  // If the page is opened without a recordId (user refreshed or navigated
-  // directly), check auth and redirect:
-  //   • valid token  → /dashboard/events
-  //   • no token     → /login
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (recordId) return; // normal post-registration flow — skip guard
+    if (recordId) return;
 
     setRedirecting(true);
     let active = true;
@@ -97,6 +97,19 @@ function ConfirmationContent() {
     return () => { active = false; };
   }, [recordId, recordType]);
 
+  // Handle invitation download logic
+  const handleDownloadInvitation = () => {
+    downloadInvitationPdf({
+      name: displayName,
+      invitationNumber,
+      cbId: displayCbId,
+      eventName: eventLabel,
+      eventDate: formattedDate,
+      email: displayEmail,
+      phone: displayPhone,
+    });
+  };
+
   // Show a spinner while the guard is running
   if (redirecting) {
     return (
@@ -109,10 +122,13 @@ function ConfirmationContent() {
   const event = record?.event_detail ?? null;
   const formattedDate = formatEventDate(event?.event_date ?? "");
   const eventLabel = event?.name ?? "Event details";
+  
   const displayName = record?.member_detail
     ? `${record.member_detail.first_name} ${record.member_detail.last_name}`.trim()
     : name;
   const displayCbId = record?.member_detail?.cb_id ?? cbId;
+  const displayEmail = record?.member_detail?.email ?? params.get("email") ?? "—";
+  const displayPhone = record?.member_detail?.phone ?? params.get("phone") ?? "—";
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center font-sans overflow-x-hidden px-4 py-12 md:py-16">
@@ -166,7 +182,7 @@ function ConfirmationContent() {
                 Member ID:{" "}
                 <span className="font-bold text-ui-text-main">{displayCbId}</span>
               </p>
-              <div className="mt-2 bg-brand-sunshine/80 rounded-xl px-4 py-2">
+              <div className="mt-2 bg-brand-sunshine rounded-xl px-4 py-2">
                 <p className="text-[12px] font-bold text-ui-text-main">
                   Please bring this invitation with you.
                 </p>
@@ -183,7 +199,7 @@ function ConfirmationContent() {
                 <div className="flex items-center gap-2">
                   <Calendar size={16} className="text-brand-primary" />
                   <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
-                    Event
+                    Event Details
                   </p>
                 </div>
 
@@ -198,11 +214,36 @@ function ConfirmationContent() {
                     <p className="text-sm">{loadError}</p>
                   </div>
                 ) : event ? (
-                  <div className="space-y-2">
-                    <p className="text-sm font-semibold text-ui-text-main">{eventLabel}</p>
-                    <p className="text-sm text-ui-text-muted">
-                      <span className="font-semibold">Date:</span> {formattedDate}
-                    </p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-semibold text-ui-text-main">{eventLabel}</p>
+                      <p className="text-sm text-ui-text-muted mt-0.5">
+                        <span className="font-semibold text-ui-text-main">Date:</span> {formattedDate}
+                      </p>
+                    </div>
+                    
+                    <hr className="border-ui-border/60" />
+                    
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center gap-2 text-sm text-ui-text-muted">
+                        <User size={14} className="text-ui-text-muted shrink-0" />
+                        <p>
+                          <span className="font-semibold text-ui-text-main">Name:</span> {displayName}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-ui-text-muted">
+                        <Mail size={14} className="text-ui-text-muted shrink-0" />
+                        <p>
+                          <span className="font-semibold text-ui-text-main">Email:</span> {displayEmail}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-ui-text-muted">
+                        <Phone size={14} className="text-ui-text-muted shrink-0" />
+                        <p>
+                          <span className="font-semibold text-ui-text-main">Phone:</span> {displayPhone}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-sm text-ui-text-muted">No event details available.</p>
@@ -230,11 +271,24 @@ function ConfirmationContent() {
                 rounded="2xl"
                 fullWidth
                 size="lg"
+                icon={<Download size={16} strokeWidth={2.5} />}
+                onClick={handleDownloadInvitation}
+              >
+                Download Invitation
+              </Button>
+              <Button
+                variant="outline"
+                rounded="2xl"
+                fullWidth
+                size="lg"
                 icon={<Home size={16} strokeWidth={2.5} />}
                 onClick={() => router.push("/dashboard/events")}
               >
                 Go to My Events
               </Button>
+              <p className="text-center text-sm font-semibold text-brand-dark">
+                Come ready to make someone else's day a little brighter.
+              </p>
             </div>
           </div>
         </div>

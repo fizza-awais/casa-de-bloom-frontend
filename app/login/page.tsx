@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Mail, Lock, Loader2, Sparkles } from "lucide-react";
+import { Mail, Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { API_URL } from "@/lib/api";
 
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -64,13 +65,15 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[420px] bg-white/80 backdrop-blur-xl rounded-[28px] p-6 md:p-8 shadow-[0_24px_50px_rgba(31,27,36,0.15)] border border-white/60">
         
         {/* Sunshine Accent Tag */}
-        <span className="text-[11px] font-bold text-ui-text-main uppercase tracking-widest bg-brand-sunshine px-3 py-1 rounded-full inline-block mb-4 shadow-sm">
-          Welcome Back
-        </span>
+        <div className="flex justify-center">
+          <span className="text-[11px] font-bold text-ui-text-main uppercase tracking-widest bg-brand-sunshine px-3 py-1 rounded-full inline-block mb-4 shadow-sm">
+            Welcome Back
+          </span>
+        </div>
 
         <div className="text-center mb-6">
           <h1 className="text-2xl font-extrabold text-ui-text-main tracking-tight">
-            Member Hub Login
+            Login
           </h1>
           <p className="text-xs text-ui-text-muted mt-1">
             Access your dashboard and register for upcoming events
@@ -109,13 +112,13 @@ export default function LoginPage() {
           {/* Password field */}
           <div className="relative border-b border-ui-border py-1 flex items-center group transition-colors focus-within:border-brand-primary">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="peer w-full bg-transparent text-ui-text-main text-sm focus:outline-none pr-8 pt-5 pb-1 placeholder-transparent"
+              className="peer w-full bg-transparent text-ui-text-main text-sm focus:outline-none pr-12 pt-5 pb-1 placeholder-transparent"
             />
             <label
               htmlFor="password"
@@ -123,9 +126,14 @@ export default function LoginPage() {
             >
               Password
             </label>
-            <span className="w-4 h-4 text-ui-text-muted absolute right-1 bottom-1.5 group-focus-within:text-brand-primary transition-colors flex items-center justify-center">
-              <Lock size={16} />
-            </span>
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="w-8 h-8 text-ui-text-muted absolute right-0 bottom-0.5 hover:text-brand-primary transition-colors flex items-center justify-center cursor-pointer"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           <div className="pt-2">
@@ -150,10 +158,10 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center mt-6 text-xs text-ui-text-muted">
-          Don't have a member account?{" "}
+          Don't have an account?{" "}
           <button
-            onClick={() => router.push("/register/guest")}
-            className="text-brand-primary font-bold hover:underline"
+            onClick={() => router.push("/")}
+            className="text-brand-primary font-bold hover:underline cursor-pointer"
           >
             Register here
           </button>

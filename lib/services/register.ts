@@ -15,6 +15,7 @@ export interface RegisterPayload {
   business_name?: string;
   city?: string;
   age_range?: string;
+  exact_age?: number;
   gender?: string;
   event_date: string;
   community_guidelines_accepted: boolean;
@@ -63,6 +64,7 @@ export interface RegistrationMemberDetail {
   business_name: string;
   city: string;
   age_range: string;
+  exact_age: number | null;
   gender: string;
   participant_type: "guest" | "volunteer";
   created_at: string;

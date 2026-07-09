@@ -1,9 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, User, Sparkles } from "lucide-react";
 import { logout } from "@/lib/services/auth";
-import Button  from "@/components/ui/Button";
 
 interface DashboardNavProps {
   firstName: string;
@@ -34,15 +32,6 @@ export default function DashboardNav({ firstName, lastName, cbId }: DashboardNav
           </span>
         </div>
       </div>
-
-      <Button 
-        onClick={handleLogout} 
-        icon={<LogOut size={14} />}
-        variant="danger"
-        size="sm"
-      >
-        Log Out
-      </Button>
     </nav>
   );
 }

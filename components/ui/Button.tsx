@@ -29,31 +29,31 @@ export default function Button({
 
   const variantClasses = {
     primary:
-      'bg-brand-primary text-white hover:bg-brand-secondary disabled:bg-brand-light disabled:text-gray-400',
+      'bg-brand-primary text-white hover:bg-brand-hover disabled:bg-brand-light disabled:text-ui-text-muted/50',
 
     secondary:
-      'bg-black text-white hover:bg-gray-800 disabled:bg-gray-400',
+      'bg-black text-white hover:bg-ui-text-main/90 disabled:bg-ui-text-muted/40',
 
     brand:
-      'bg-ui-text-main text-white hover:opacity-90 shadow-md shadow-ui-border/50 disabled:bg-gray-400',
+      'bg-ui-text-main text-white hover:opacity-90 shadow-md shadow-ui-border/50 disabled:bg-ui-text-muted/40',
 
     danger:
-      'bg-danger-500 text-white hover:bg-danger-600 disabled:bg-red-300 transition-colors shadow-sm',
+      'bg-danger-500 text-white hover:bg-danger-600 disabled:bg-danger-500/40 transition-colors shadow-sm',
 
     ghost:
-      'bg-transparent text-brand-primary border border-brand-primary hover:bg-brand-light disabled:text-gray-400 disabled:border-gray-200',
+      'bg-transparent text-brand-primary border border-brand-primary hover:bg-brand-light disabled:text-ui-text-muted/40 disabled:border-ui-border',
 
     outline:
-      'border border-ui-border text-gray-700 hover:bg-gray-100 hover:text-brand-primary disabled:border-gray-200 disabled:text-gray-400',
+      'border border-ui-border text-ui-text-main hover:bg-brand-light/30 hover:text-brand-primary disabled:border-ui-border disabled:text-ui-text-muted/40',
 
     active:
       'bg-ui-text-main text-white border border-ui-text-main hover:opacity-90 shadow-sm disabled:opacity-50',
 
     neutral:
-      'bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400',
+      'bg-brand-light/50 text-ui-text-main hover:bg-brand-light disabled:bg-ui-bg-page disabled:text-ui-text-muted/40',
 
     link:
-      'bg-transparent text-brand-primary underline font-bold p-0 hover:opacity-80 disabled:text-gray-400',
+      'bg-transparent text-brand-primary underline font-bold p-0 hover:text-brand-hover disabled:text-ui-text-muted/40',
   };
 
   const sizeClasses = {
@@ -75,7 +75,7 @@ export default function Button({
   };
 
   const baseClasses =
-    'inline-flex items-center justify-center gap-2 font-medium transition duration-200 cursor-pointer disabled:cursor-not-allowed relative';
+    'inline-flex items-center justify-center gap-2 font-medium transition duration-200 cursor-pointer disabled:cursor-not-allowed relative select-none';
 
   const widthClass = fullWidth ? 'w-full' : '';
   const opacityClass = loading ? 'opacity-70' : '';

@@ -12,7 +12,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Casa de Bloom | Event Registration",
+  title: "Casa de Bloom",
   description: "Where connections become opportunities. Register for upcoming Casa de Bloom day clubs, singles events, and community trade parties.",
   metadataBase: new URL("https://register.casadebloomsd.com"),
   keywords: ["Casa de Bloom", "Event Registration", "Day Club", "San Diego Events", "Community"],
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: "Casa de Bloom",
     images: [
       {
-        url: "/assets/Casa_de_Bloom_logo_1.png",
+        url: "/assets/images/Casa_de_Bloom_logo_2.png",
         width: 1200,
         height: 630,
         alt: "Casa de Bloom — Where connections become opportunities",

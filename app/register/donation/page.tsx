@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Suspense, useState, useRef } from "react";
 import Button from "@/components/ui/Button";
 import { Info } from "lucide-react";
+import { RegistrationFlowDetails } from "@/lib/registrationFlow";
 
 const QR_METHODS = [
   {
@@ -30,32 +31,35 @@ const QR_METHODS = [
   },
 ];
 
-function DonationContent() {
-  const params = useSearchParams();
+interface DonationViewProps {
+  details: RegistrationFlowDetails;
+  onContinue?: (details: RegistrationFlowDetails) => void;
+}
+
+export function DonationView({ details, onContinue }: DonationViewProps) {
   const router = useRouter();
   const supportSectionRef = useRef<HTMLDivElement>(null);
-
-  const invitationNumber = params.get("invitationNumber") ?? "";
-  const cbId = params.get("cbId") ?? "";
-  const name = params.get("name") ?? "";
-  const eventDate = params.get("eventDate") ?? "";
-  const participantType = params.get("participantType") ?? "";
-  const recordType = params.get("recordType") ?? "";
-  const recordId = params.get("recordId") ?? "";
 
   const [selectedMethod, setSelectedMethod] = useState<"venmo" | "zelle" | "paypal" | null>("venmo");
 
   const handleContinue = () => {
+    if (onContinue) {
+      onContinue(details);
+      return;
+    }
+
     const query = new URLSearchParams({
-      invitationNumber,
-      cbId,
-      name,
-      eventDate,
-      participantType,
-      recordType,
-      recordId,
-      registrationId: params.get("registrationId") ?? "",
-      volunteerId: params.get("volunteerId") ?? "",
+      invitationNumber: details.invitationNumber,
+      cbId: details.cbId,
+      name: details.name,
+      eventDate: details.eventDate ?? "",
+      participantType: details.participantType,
+      recordType: details.recordType,
+      recordId: details.recordId,
+      registrationId: details.registrationId ?? "",
+      volunteerId: details.volunteerId ?? "",
+      email: details.email ?? "",
+      phone: details.phone ?? "",
     });
     router.push(`/register/confirmation?${query.toString()}`);
   };
@@ -94,18 +98,17 @@ function DonationContent() {
               You're In!
             </h1>
             <p className="text-base sm:text-lg text-ui-text-main font-medium max-w-xl mx-auto leading-relaxed">
-              Welcome to Casa de Bloom. We're so excited to spend the day with you.
+              Welcome to Casa de Bloom. We’re so excited to spend the day with you.
             </p>
           </header>
 
-          {/* Optional Support Section */}
-          <section ref={supportSectionRef} className="space-y-4 rounded-3xl border border-brand-primary/10 bg-brand-light/10 p-5 md:p-6 transition-all duration-300">
+          <section className="space-y-4 rounded-3xl border border-brand-primary/10 bg-brand-light/10 p-5 md:p-6 transition-all duration-300">
             <div className="text-center space-y-1">
               <h2 className="text-lg font-bold text-brand-primary">
-                Support Casa de Bloom
+                How donations help
               </h2>
-              <p className="text-xs text-ui-text-muted max-w-md mx-auto leading-relaxed">
-                If you would like to support our community, registration gifts help cover event setup, refreshments, guest gifts, and Kiwi Spa experiences. Giving is entirely optional.
+              <p className="mx-auto max-w-md text-xs leading-relaxed text-ui-text-muted">
+                Registration support helps with event setup, cleanup, refreshments, guest gifts, Kiwi Spa experiences, and the little details that make the day feel special. Giving is always optional.
               </p>
             </div>
 
@@ -172,7 +175,6 @@ function DonationContent() {
               </p>
             </div>
             
-            {/* Kiwi Love QR Code */}
             <div className="relative w-28 h-28 rounded-2xl overflow-hidden shadow-sm border-2 border-white bg-white flex-shrink-0">
               <Image
                 src="/assets/images/kiwi_love_qr.png"
@@ -193,18 +195,21 @@ function DonationContent() {
               fullWidth
               size="lg"
               onClick={handleContinue}
+              disabled={!details.invitationNumber}
             >
               Continue to My Invitation
             </Button>
             
             <div className="text-center">
-              <button
+              <Button
                 type="button"
                 onClick={scrollToSupport}
-                className="text-xs font-semibold text-ui-text-muted hover:text-brand-primary transition-colors cursor-pointer border-b border-dashed border-ui-text-muted/40 hover:border-brand-primary pb-0.5"
+                variant="outline"
+                rounded="xl"
+                size="md"
               >
                 Support Casa de Bloom (Optional)
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -218,6 +223,36 @@ function DonationContent() {
         </div>
       </div>
     </main>
+  );
+}
+
+function DonationContent() {
+  const params = useSearchParams();
+  const recordType = (params.get("recordType") ??
+    (params.get("participantType") === "volunteer" ? "volunteer" : "registration")) as
+    | "registration"
+    | "volunteer";
+
+  return (
+    <DonationView
+      details={{
+        invitationNumber: params.get("invitationNumber") ?? "",
+        cbId: params.get("cbId") ?? "",
+        name: params.get("name") ?? "",
+        eventDate: params.get("eventDate") ?? "",
+        participantType: params.get("participantType") ?? "",
+        recordType,
+        recordId:
+          params.get("recordId") ??
+          params.get("registrationId") ??
+          params.get("volunteerId") ??
+          "",
+        registrationId: params.get("registrationId") ?? "",
+        volunteerId: params.get("volunteerId") ?? "",
+        email: params.get("email") ?? "",
+        phone: params.get("phone") ?? "",
+      }}
+    />
   );
 }
 
