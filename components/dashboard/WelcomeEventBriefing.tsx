@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { formatEventDate } from "@/lib/date";
+import { REGISTRATION_CELEBRATION_KEY } from "@/lib/registrationCelebration";
 import { fetchEvents } from "@/lib/services/events";
 
 interface EventDetail {
@@ -149,6 +150,11 @@ export default function WelcomeEventBriefing({
   }, []);
 
   useEffect(() => {
+    const shouldCelebrate =
+      window.sessionStorage.getItem(REGISTRATION_CELEBRATION_KEY) === "1";
+    if (!shouldCelebrate) return;
+
+    window.sessionStorage.removeItem(REGISTRATION_CELEBRATION_KEY);
     const timer = window.setTimeout(fireConfetti, 350);
     return () => window.clearTimeout(timer);
   }, [fireConfetti]);
@@ -187,9 +193,9 @@ export default function WelcomeEventBriefing({
   }, [eventRecords.length]);
 
   return (
-    <section className="dashboard-shine relative overflow-hidden rounded-3xl border border-ui-border bg-white/80 p-4 shadow-sm backdrop-blur-md md:p-6">
+    <section className="dashboard-shine relative isolate overflow-hidden rounded-3xl border border-ui-border bg-white/80 p-4 shadow-sm backdrop-blur-md md:p-6">
       <div
-        className="pointer-events-none absolute inset-0 overflow-hidden"
+        className="pointer-events-none absolute inset-0 z-30 overflow-hidden"
         aria-hidden="true"
       >
         {confetti.map((piece) => (
@@ -211,7 +217,7 @@ export default function WelcomeEventBriefing({
         ))}
       </div>
 
-      <div className="relative flex flex-col gap-4">
+      <div className="relative z-10 flex flex-col gap-4">
         <div className="dashboard-interactive-card dashboard-shine rounded-3xl border border-brand-primary/20 bg-gradient-to-br from-brand-light via-white to-brand-accent/10 p-4 text-ui-text-main shadow-sm md:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">

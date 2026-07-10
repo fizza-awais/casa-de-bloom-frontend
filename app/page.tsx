@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import HomeFlow from "@/components/HomeFlow";
-import { Sidebar } from "@/components/Sidebar";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import DashboardPage from "@/app/dashboard/page";
 import { DashboardProvider } from "@/lib/context/DashboardContext";
@@ -19,10 +18,8 @@ export default async function HomePage() {
 
   return (
     <DashboardProvider profile={profile}>
-      <div className="min-h-screen bg-ui-bg-page flex flex-col lg:flex-row gap-6 p-4 md:p-6 lg:p-8">
-        <Sidebar role={profile.participant_type} />
-
-        <div className="flex-1 w-full max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-ui-bg-page p-4 md:p-6 lg:p-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
           <DashboardNav
             firstName={profile.first_name}
             lastName={profile.last_name}

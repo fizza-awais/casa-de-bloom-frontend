@@ -19,6 +19,7 @@ import {
   RegisterPayload,
   RegisterResponse,
 } from "@/lib/services/register";
+import { REGISTRATION_CELEBRATION_KEY } from "@/lib/registrationCelebration";
 
 export interface FormField {
   name: string;
@@ -505,6 +506,7 @@ export default function MultiStepRegistrationForm({
 
       keepLoading = true;
       setIsRedirecting(true);
+      window.sessionStorage.setItem(REGISTRATION_CELEBRATION_KEY, "1");
       if (onRegistrationComplete) {
         onRegistrationComplete(result, formData);
         return;

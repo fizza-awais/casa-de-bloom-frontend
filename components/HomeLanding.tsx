@@ -71,7 +71,7 @@ export default function HomeLanding({ onGuest, onVolunteer }: HomeLandingProps =
 
       <div className="relative z-10 mt-8 text-center text-white/90 drop-shadow-md pointer-events-none">
         <p className="font-serif text-base italic tracking-wide opacity-90 md:text-lg">
-          "Where connections become opportunities."
+          &ldquo;Where connections become opportunities.&rdquo;
         </p>
       </div>
     </main>
