@@ -4,7 +4,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
   BriefcaseBusiness,
+  Camera,
   ChevronDown,
+  Clock,
   Gift,
   HandHeart,
   HeartHandshake,
@@ -36,11 +38,15 @@ interface DashboardEventRecord {
   created_at?: string;
   status?: string;
   invitation_number?: string;
+  skills_offered?: string;
+  availability?: string;
+  can_capture_media?: boolean;
   event_detail?: EventDetail;
 }
 
 interface WelcomeEventBriefingProps {
   firstName: string;
+  participantType?: "guest" | "volunteer";
   registrations?: DashboardEventRecord[];
   volunteerDetails?: DashboardEventRecord[];
 }
@@ -111,6 +117,9 @@ function formatTimeRange(event?: EventDetail) {
 
 export default function WelcomeEventBriefing({
   firstName,
+  participantType = "guest",
+  registrations = [],
+  volunteerDetails = [],
 }: WelcomeEventBriefingProps) {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
   const [spotlightIndex, setSpotlightIndex] = useState(0);
@@ -136,6 +145,33 @@ export default function WelcomeEventBriefing({
     : "Date will be shared soon";
   const location =
     event?.location ?? event?.address ?? "Location will be shared soon";
+  const isVolunteerExperience =
+    participantType === "volunteer" ||
+    (volunteerDetails.length > 0 && registrations.length === 0);
+  const primaryVolunteerDetail = volunteerDetails[0];
+  const mediaHelpLabel =
+    primaryVolunteerDetail?.can_capture_media === undefined
+      ? "Not provided yet"
+      : primaryVolunteerDetail.can_capture_media
+        ? "Yes"
+        : "No";
+  const volunteerDetailItems = [
+    {
+      label: "Availability",
+      value: primaryVolunteerDetail?.availability || "Not provided yet",
+      icon: Clock,
+    },
+    {
+      label: "Skills/contribution",
+      value: primaryVolunteerDetail?.skills_offered || "Not provided yet",
+      icon: Sparkles,
+    },
+    {
+      label: "Photo/video help",
+      value: mediaHelpLabel,
+      icon: Camera,
+    },
+  ];
 
   const fireConfetti = useCallback(() => {
     const burst = buildConfettiBurst();
@@ -223,16 +259,17 @@ export default function WelcomeEventBriefing({
             <div className="max-w-3xl">
               <div className="dashboard-float-icon mb-3 inline-flex items-center gap-2 rounded-full bg-brand-sunshine/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-dark">
                 <Sparkles size={14} />
-                Welcome to the platform
+                {isVolunteerExperience ? "Volunteer welcome" : "Welcome to the platform"}
               </div>
               <h1 className="text-2xl font-extrabold leading-tight text-ui-text-main md:text-3xl">
-                Welcome, {firstName || "friend"}. Your Casa de Bloom experience
-                starts here.
+                {isVolunteerExperience
+                  ? `Welcome, ${firstName || "friend"}. Thank you for helping create the Casa de Bloom experience.`
+                  : `Welcome, ${firstName || "friend"}. Your Casa de Bloom experience starts here.`}
               </h1>
               <p className="mt-3 text-sm font-semibold leading-6 text-ui-text-muted md:text-base">
-                Casa de Bloom is a community-centered Reality Show where
-                connections become opportunities through shared value, joyful
-                participation, and genuine human connection.
+                {isVolunteerExperience
+                  ? "Your time, service, and support help shape a day filled with connection, generosity, and community."
+                  : "Casa de Bloom is a community-centered Reality Show where connections become opportunities through shared value, joyful participation, and genuine human connection."}
               </p>
             </div>
 
@@ -252,7 +289,7 @@ export default function WelcomeEventBriefing({
             {eventRecords.length > 1 && (
               <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-primary/10 bg-white/55 px-3 py-2">
                 <p className="text-xs font-bold uppercase tracking-wider text-ui-text-muted">
-                  Showing event {activeSpotlightIndex + 1} of {eventRecords.length}
+                  Upcoming event {activeSpotlightIndex + 1} of {eventRecords.length}
                 </p>
                 <div className="flex gap-1.5" aria-hidden="true">
                   {eventRecords.map((record, index) => (
@@ -322,14 +359,19 @@ export default function WelcomeEventBriefing({
               </div>
               <div>
                 <p className="text-xs font-extrabold uppercase tracking-wider text-brand-dark">
-                  Potluck reminder
+                  {isVolunteerExperience
+                    ? "Also joining the celebration?"
+                    : "Potluck reminder"}
                 </p>
                 <h3 className="mt-1 text-base font-extrabold leading-snug text-ui-text-main md:text-lg">
-                  Bring a dish and a drink to share.
+                  {isVolunteerExperience
+                    ? "Community Potluck is optional for volunteers."
+                    : "Bring a dish and a drink to share."}
                 </h3>
                 <p className="mt-1 text-sm font-medium leading-5 text-ui-text-muted">
-                  This is part of the Casa de Bloom experience, so please plan
-                  ahead.
+                  {isVolunteerExperience
+                    ? "If you'll be participating beyond your volunteer role, you're welcome to bring one dish and one drink for the Community Potluck."
+                    : "Please bring one dish and one drink for the Community Potluck so we can build one generous table together."}
                 </p>
               </div>
             </div>
@@ -345,17 +387,51 @@ export default function WelcomeEventBriefing({
                   Give & Take Table
                 </p>
                 <h3 className="mt-1 text-base font-extrabold leading-snug text-ui-text-main md:text-lg">
-                  Bring something meaningful to give, and discover something to
-                  take.
+                  {isVolunteerExperience
+                    ? "You're welcome to bring one item, but it is optional."
+                    : "Bring one beautiful item you no longer use."}
                 </h3>
                 <p className="mt-1 text-sm font-medium leading-5 text-ui-text-muted">
-                  Items, samples, services, skills, resources, or thoughtful
-                  community offerings are welcome.
+                  {isVolunteerExperience
+                    ? "Your volunteer contribution already matters. If you want to join the table too, bring something someone else may love."
+                    : "Choose something someone else may love, then explore the table with the same spirit of generosity."}
                 </p>
               </div>
             </div>
           </div>
         </div>
+
+        {isVolunteerExperience && (
+          <div className="dashboard-interactive-card rounded-2xl border border-brand-primary/20 bg-white/75 p-4 shadow-sm">
+            <div className="mb-3 flex items-center gap-2">
+              <HandHeart size={18} className="text-brand-primary" />
+              <h2 className="text-base font-extrabold text-ui-text-main">
+                Your Volunteer Details
+              </h2>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {volunteerDetailItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-ui-border bg-white/70 p-3"
+                  >
+                    <div className="mb-2 flex items-center gap-2 text-brand-primary">
+                      <Icon size={15} />
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider">
+                        {item.label}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold leading-5 text-ui-text-main">
+                      {item.value}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div>
           <div className="mb-3 flex items-center gap-2">

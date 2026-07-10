@@ -6,6 +6,9 @@ export interface InvitationData {
   eventDate: string;
   email: string;
   phone: string;
+  role?: "guest" | "volunteer";
+  availability?: string;
+  contribution?: string;
 }
 
 export function getInvitationStyles(): string {
@@ -259,6 +262,41 @@ export function getInvitationStyles(): string {
 
 export function getInvitationMarkup(data: InvitationData): string {
   const { name, invitationNumber, cbId, eventName, eventDate, email, phone } = data;
+  const isVolunteer = data.role === "volunteer";
+  const badgeLabel = isVolunteer ? "Volunteer Confirmation" : "Invitation";
+  const title = isVolunteer
+    ? "You're Confirmed as a Casa de Bloom Volunteer"
+    : "Your Casa de Bloom Invitation";
+  const subtitle = isVolunteer
+    ? `Thank you for helping create a day filled with connection, generosity, and community, <span>${name}</span>.`
+    : `This is your personal invitation, <span>${name}</span>. We are holding your place in a day designed for connection and community.`;
+  const numberLabel = isVolunteer
+    ? "Your Volunteer Confirmation Number"
+    : "Your Invitation Number";
+  const statusText = isVolunteer
+    ? "Please show this at volunteer check-in."
+    : "Please bring this invitation with you.";
+  const volunteerRows = isVolunteer
+    ? `${data.availability ? `<div class="info-row">
+              <div class="info-label">Availability</div>
+              <div class="info-value">${data.availability}</div>
+            </div>` : ""}
+            ${data.contribution ? `<div class="info-row">
+              <div class="info-label">Contribution</div>
+              <div class="info-value">${data.contribution}</div>
+            </div>` : ""}`
+    : "";
+  const guestReminderRows = isVolunteer
+    ? ""
+    : `<div class="info-divider"></div>
+            <div class="info-row">
+              <div class="info-label">Potluck</div>
+              <div class="info-value">Bring one dish and one drink.</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Give &amp; Take</div>
+              <div class="info-value">Bring one beautiful item someone else may love.</div>
+            </div>`;
 
   return `<div class="invitation-root">
     <div class="invitation-wrapper">
@@ -267,11 +305,11 @@ export function getInvitationMarkup(data: InvitationData): string {
 
         <div class="ticket-body">
           <div>
-            <span class="guest-badge"><span class="dot"></span>Invitation</span>
+            <span class="guest-badge"><span class="dot"></span>${badgeLabel}</span>
           </div>
 
-          <h1 class="title-main">Your Casa de Bloom Invitation</h1>
-          <p class="sub-greeting">This is your personal invitation, <span>${name}</span>. We are holding your place in a day designed for connection and community.</p>
+          <h1 class="title-main">${title}</h1>
+          <p class="sub-greeting">${subtitle}</p>
 
           <div class="info-box">
             <div class="info-row">
@@ -297,6 +335,8 @@ export function getInvitationMarkup(data: InvitationData): string {
               <div class="info-label">Phone</div>
               <div class="info-value">${phone}</div>
             </div>
+            ${volunteerRows}
+            ${guestReminderRows}
           </div>
         </div>
 
@@ -308,14 +348,17 @@ export function getInvitationMarkup(data: InvitationData): string {
 
         <div class="ticket-footer">
           <div class="invitation-box">
-            <div class="invitation-number-label">Your Invitation Number</div>
+            <div class="invitation-number-label">${numberLabel}</div>
             <h2 class="invitation-number-val">${invitationNumber}</h2>
             <p class="member-id-text">Member ID: <strong>${cbId}</strong></p>
           </div>
 
-          <div class="status-badge">Please bring this invitation with you.</div>
+          <div class="status-badge">${statusText}</div>
 
-          <p class="footer-note">Casa de Bloom - Where connections become opportunities.</p>
+          <p class="footer-note">
+            Casa de Bloom - Where connections become opportunities.<br>
+            <strong>Come ready to make someone else's day a little brighter.</strong>
+          </p>
         </div>
       </div>
     </div>
@@ -323,11 +366,16 @@ export function getInvitationMarkup(data: InvitationData): string {
 }
 
 export function getInvitationHtml(data: InvitationData): string {
+  const title =
+    data.role === "volunteer"
+      ? "Casa de Bloom Volunteer Confirmation"
+      : "Your Casa de Bloom Private Guest Invitation";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Your Casa de Bloom Private Guest Invitation</title>
+  <title>${title}</title>
   ${getInvitationStyles()}
 </head>
 <body>

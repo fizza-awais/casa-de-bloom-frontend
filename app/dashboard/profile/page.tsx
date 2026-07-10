@@ -110,10 +110,12 @@ export default function ProfilePage() {
       type: "select", 
       placeholder: "-- Select Age Range --",
       options: [
-        { label: "21-29", value: "21-29" },
-        { label: "31-39", value: "31-39" },
-        { label: "41-49", value: "41-49" },
-        { label: "51-59", value: "51-59" }
+        { label: "21+", value: "21+" },
+        { label: "30+", value: "30+" },
+        { label: "40+", value: "40+" },
+        { label: "50+", value: "50+" },
+        { label: "60+", value: "60+" },
+        { label: "70+", value: "70+" },
       ]
     },
     { 

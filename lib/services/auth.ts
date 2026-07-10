@@ -23,6 +23,8 @@ export interface MemberEventRecord {
   emergency_contact?: string;
   food_allergies?: string;
   bringing_to_grill?: string;
+  give_take_contribution?: string;
+  service_offering?: string;
   willing_to_share_social?: boolean;
   status?: string;
   skills_offered?: string;

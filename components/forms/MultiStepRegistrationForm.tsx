@@ -9,6 +9,7 @@ import ComplianceStep from "./ComplianceStep";
 import ProfileImageUploader from "./ProfileImageUploader";
 import { RegistrationRedirectLoader } from "@/components/ui/PageLoader";
 import {
+  ProfileImage,
   SelectedProfileImage,
   validateProfileImageFiles,
 } from "@/lib/profileImages";
@@ -41,11 +42,13 @@ export interface FormField {
   icon?: React.ReactNode;
   requiredMessage?: string;
   invalidMessage?: string;
+  helperText?: string;
 }
 
 export interface CustomStep {
   key: string;
   label: string;
+  subtitle?: string;
   img: string;
   fields: FormField[];
 }
@@ -68,20 +71,21 @@ interface MultiStepRegistrationFormProps {
     result: RegisterResponse,
     formData: RegistrationFormData
   ) => void;
+  initialProfileImages?: ProfileImage[];
 }
 
 const COMPLIANCE_STEP = {
   key: "compliance" as const,
-  label: "Legal Compliance",
+  label: "Final Confirmations",
   img: "/assets/images/WhatsApp Image 2026-06-16 at 2.56.56 AM (3).jpeg",
 };
 
 const COMPLIANCE_ERROR_MESSAGES: Record<string, string> = {
-  isRealityShow:
+  reality_show_understood:
     "You must confirm you understand Casa de Bloom is a community-centered Reality Show.",
   photoReleaseAccepted:
     "You must confirm you understand photos and videos will be taken.",
-  positiveExperience:
+  positive_experience_agreed:
     "You must agree to help create a positive experience for everyone.",
   ageConfirmed: "You must confirm you are at least 21 years old.",
   guidelinesAccepted:
@@ -105,6 +109,11 @@ const hasFieldValue = (value: RegistrationFormValue): boolean =>
   value !== "" &&
   (typeof value !== "string" || !!value.trim());
 
+const MIN_EXACT_AGE = 21;
+const MAX_EXACT_AGE = 120;
+const EXACT_AGE_ERROR =
+  "Exact age must be a whole number between 21 and 120.";
+
 export default function MultiStepRegistrationForm({
   title,
   participantType,
@@ -112,6 +121,7 @@ export default function MultiStepRegistrationForm({
   initialFormData,
   onSubmit,
   onRegistrationComplete,
+  initialProfileImages = [],
 }: MultiStepRegistrationFormProps) {
   const router = useRouter();
   const [visiblePasswords, setVisiblePasswords] = useState<
@@ -122,9 +132,9 @@ export default function MultiStepRegistrationForm({
   const allSteps = [...steps, COMPLIANCE_STEP];
 
   const [formData, setFormData] = useState<RegistrationFormData>({
-    isRealityShow: false,
+    reality_show_understood: false,
     photoReleaseAccepted: false,
-    positiveExperience: false,
+    positive_experience_agreed: false,
     ageConfirmed: false,
     guidelinesAccepted: false,
     ...initialFormData,
@@ -200,7 +210,16 @@ export default function MultiStepRegistrationForm({
       return field.invalidMessage || "Valid email is required.";
     }
 
-    if (field.type === "number" && textValue && Number(textValue) < 21) {
+    if (field.name === "exactAge" && textValue) {
+      const age = Number(textValue);
+      if (
+        !Number.isInteger(age) ||
+        age < MIN_EXACT_AGE ||
+        age > MAX_EXACT_AGE
+      ) {
+        return field.invalidMessage || EXACT_AGE_ERROR;
+      }
+    } else if (field.type === "number" && textValue && Number(textValue) < 21) {
       return field.invalidMessage || "You must be at least 21 years old.";
     }
 
@@ -301,6 +320,7 @@ export default function MultiStepRegistrationForm({
 
   const validateStep = (key: string): boolean => {
     const errs: Record<string, string> = {};
+    let profileImageError: string | null = null;
 
     if (key === "compliance") {
       Object.entries(COMPLIANCE_ERROR_MESSAGES).forEach(([name, message]) => {
@@ -318,10 +338,15 @@ export default function MultiStepRegistrationForm({
           }
         });
       }
+
+      if (key === steps[0]?.key && initialProfileImages.length + selectedImages.length === 0) {
+        profileImageError = "Upload at least 1 profile photo to continue.";
+      }
     }
 
     setErrors(errs);
-    return Object.keys(errs).length === 0;
+    setImageError(profileImageError);
+    return Object.keys(errs).length === 0 && !profileImageError;
   };
 
   const validateStepWithPreflight = async (key: string): Promise<boolean> => {
@@ -409,9 +434,11 @@ export default function MultiStepRegistrationForm({
       exact_age: exactAge ? Number(exactAge) : undefined,
       gender: getOptionalStringValue("gender"),
       event_date: getStringValue("eventDate"),
+      reality_show_understood: !!formData.reality_show_understood,
       community_guidelines_accepted: !!formData.guidelinesAccepted,
       community_guidelines_version: "1.0",
       photo_video_release_accepted: !!formData.photoReleaseAccepted,
+      positive_experience_agreed: !!formData.positive_experience_agreed,
       age_confirmed_21_plus: !!formData.ageConfirmed,
     };
 
@@ -422,6 +449,8 @@ export default function MultiStepRegistrationForm({
       base.emergency_contact = getOptionalStringValue("emergencyContact");
       base.food_allergies = getOptionalStringValue("foodAllergies");
       base.bringing_to_grill = getOptionalStringValue("communityGrill");
+      base.give_take_contribution = getOptionalStringValue("giveTakeContribution");
+      base.service_offering = getOptionalStringValue("serviceOffering");
       base.willing_to_share_social = !!formData.spreadTheWord;
     } else {
       base.availability = getOptionalStringValue("availabilityTime");
@@ -438,7 +467,7 @@ export default function MultiStepRegistrationForm({
 
     const validationError = validateProfileImageFiles({
       files,
-      currentCount: selectedImages.length,
+      currentCount: initialProfileImages.length + selectedImages.length,
     });
     if (validationError) {
       setImageError(validationError);
@@ -512,7 +541,20 @@ export default function MultiStepRegistrationForm({
         return;
       }
 
-      router.push("/dashboard");
+      const query = new URLSearchParams({
+        invitationNumber: result.invitation_number,
+        cbId: result.cb_id,
+        name: `${getStringValue("firstName")} ${getStringValue("lastName")}`.trim(),
+        eventDate: getStringValue("eventDate"),
+        participantType,
+        recordType: result.record_type,
+        recordId: result.record_id,
+        registrationId: result.registration_id ?? "",
+        volunteerId: result.volunteer_id ?? "",
+        email: getStringValue("email"),
+        phone: getStringValue("phone"),
+      });
+      router.push(`/register/confirmation?${query.toString()}`);
     } catch (err: unknown) {
       keepLoading = false;
       setIsRedirecting(false);
@@ -698,7 +740,9 @@ export default function MultiStepRegistrationForm({
               value={getStringValue(field.name)}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
               className={inputClass}
-              min={21}
+              min={field.name === "exactAge" ? MIN_EXACT_AGE : 21}
+              max={field.name === "exactAge" ? MAX_EXACT_AGE : undefined}
+              step={field.name === "exactAge" ? 1 : undefined}
               aria-invalid={!!errors[field.name]}
               aria-describedby={
                 errors[field.name] ? `${field.name}-error` : undefined
@@ -736,6 +780,7 @@ export default function MultiStepRegistrationForm({
 
   const errorList = Object.values(errors);
   const currentKey = allSteps[currentIndex].key;
+  const currentStep = allSteps[currentIndex] as CustomStep;
   const isLastStep = currentIndex === allSteps.length - 1;
   const isCurrentStepValid = isStepValid(currentKey);
   const isContinueDisabled = isSubmitting || isCheckingEmail || isRedirecting;
@@ -816,10 +861,10 @@ export default function MultiStepRegistrationForm({
 
               <div className="text-left">
                 <h2 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-brand-dark to-brand-primary bg-clip-text text-transparent">
-                  {allSteps[currentIndex].label}
+                  {currentStep.label}
                 </h2>
                 <p className="text-xs text-ui-text-muted mt-1 font-medium">
-                  Please enter your details to continue.
+                  {currentStep.subtitle || "Please enter your details to continue."}
                 </p>
               </div>
 
@@ -852,6 +897,11 @@ export default function MultiStepRegistrationForm({
                                 {errors[field.name]}
                               </p>
                             )}
+                            {field.helperText && !errors[field.name] && (
+                              <p className="text-[11px] leading-5 text-ui-text-muted -mt-1 mb-2 pl-1">
+                                {field.helperText}
+                              </p>
+                            )}
                           </div>
                         );
                       }
@@ -859,6 +909,7 @@ export default function MultiStepRegistrationForm({
                     {currentIndex === 0 && (
                       <div className="sm:col-span-2">
                         <ProfileImageUploader
+                          existingImages={initialProfileImages}
                           selectedImages={selectedImages}
                           error={imageError}
                           disabled={isSubmitting}
@@ -938,7 +989,7 @@ export default function MultiStepRegistrationForm({
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 size={16} className="animate-spin" />
                       {isRedirecting
-                        ? "Preparing dashboard..."
+                        ? "Preparing invitation..."
                         : isCheckingEmail
                         ? "Checking email..."
                         : "Submitting..."}

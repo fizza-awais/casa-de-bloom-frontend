@@ -18,6 +18,7 @@ export default function DashboardPage() {
       >
         <WelcomeEventBriefing
           firstName={profile.first_name}
+          participantType={profile.participant_type}
           registrations={profile.registrations}
           volunteerDetails={profile.volunteer_details}
         />
@@ -31,6 +32,7 @@ export default function DashboardPage() {
         <EventTracker
           registrations={profile.registrations}
           volunteerDetails={profile.volunteer_details}
+          participantType={profile.participant_type}
           member={{
             cbId: profile.cb_id,
             firstName: profile.first_name,
@@ -47,7 +49,7 @@ export default function DashboardPage() {
         className="dashboard-reveal scroll-mt-24"
         style={{ "--dashboard-delay": "240ms" } as React.CSSProperties}
       >
-        <DashboardDonationSection />
+        <DashboardDonationSection participantType={profile.participant_type} />
       </section>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
 
 interface PageLoaderProps {
   title?: string;
@@ -56,15 +56,15 @@ export function RegistrationRedirectLoader() {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ui-bg-page/85 p-6 backdrop-blur-md">
       <div className="dashboard-reveal w-full max-w-md rounded-3xl border border-white/70 bg-white p-6 text-center shadow-2xl">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-light text-brand-primary">
-          <ImagePlus size={28} />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-status-active/10 text-status-active">
+          <CheckCircle2 size={28} />
         </div>
         <h2 className="mt-4 text-xl font-extrabold text-ui-text-main">
-          Preparing your dashboard
+          Preparing your invitation
         </h2>
         <p className="mt-2 text-sm font-medium leading-6 text-ui-text-muted">
-          Your registration is complete. We&apos;re loading your profile,
-          images, and event details now.
+          Your registration is complete. We&apos;re loading your invitation,
+          profile, and event details now.
         </p>
         <div className="mt-5 flex items-center justify-center gap-2 text-sm font-bold text-brand-primary">
           <Loader2 size={17} className="animate-spin" />

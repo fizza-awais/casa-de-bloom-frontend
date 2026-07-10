@@ -11,7 +11,7 @@ interface ComplianceStepProps {
 
 const CHECKBOX_ITEMS = [
   {
-    id: "isRealityShow",
+    id: "reality_show_understood",
     label: "I understand Casa de Bloom is a community-centered Reality Show. *",
   },
   {
@@ -19,7 +19,7 @@ const CHECKBOX_ITEMS = [
     label: "I understand photos and videos will be taken. *",
   },
   {
-    id: "positiveExperience",
+    id: "positive_experience_agreed",
     label: "I agree to help create a positive experience for everyone. *",
   },
   {
@@ -47,7 +47,7 @@ export default function ComplianceStep({
     <div className="space-y-5">
       <div className="rounded-2xl border border-brand-primary/10 bg-brand-light/20 p-5 text-left space-y-3">
         <p className="text-sm font-semibold uppercase tracking-wider text-brand-dark">
-          Final confirmations
+          Final Confirmations
         </p>
         <p className="text-xs sm:text-sm leading-relaxed text-ui-text-main">
           These are the last things to confirm before we create your invitation. The full Community Guidelines & Terms stay available{" "}

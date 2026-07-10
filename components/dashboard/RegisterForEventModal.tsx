@@ -111,9 +111,11 @@ export default function RegisterForEventModal() {
         exact_age: profile.exact_age ?? undefined,
         gender: profile.gender || undefined,
         event_date: eventDate,
+        reality_show_understood: true,
         community_guidelines_accepted: true,
         community_guidelines_version: "1.0",
         photo_video_release_accepted: true,
+        positive_experience_agreed: true,
         age_confirmed_21_plus: true,
         attending_as: attendanceMode,
       });

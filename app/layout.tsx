@@ -16,6 +16,15 @@ export const metadata: Metadata = {
   description: "Where connections become opportunities. Register for upcoming Casa de Bloom day clubs, singles events, and community trade parties.",
   metadataBase: new URL("https://register.casadebloomsd.com"),
   keywords: ["Casa de Bloom", "Event Registration", "Day Club", "San Diego Events", "Community"],
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     title: "Casa de Bloom | Event Registration",
     description: "Where connections become opportunities. Register for upcoming Casa de Bloom day clubs, singles events, and community trade parties.",

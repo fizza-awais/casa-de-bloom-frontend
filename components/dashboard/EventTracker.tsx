@@ -37,15 +37,22 @@ interface Registration {
   emergency_contact?: string;
   food_allergies?: string;
   bringing_to_grill?: string;
+  give_take_contribution?: string;
+  service_offering?: string;
   willing_to_share_social?: boolean;
   status?: string;
+  skills_offered?: string;
+  availability?: string;
+  can_capture_media?: boolean;
   created_at?: string;
   event_detail?: EventDetail;
+  recordType?: "guest" | "volunteer";
 }
 
 interface EventTrackerProps {
   registrations?: Registration[];
   volunteerDetails?: Registration[];
+  participantType?: "guest" | "volunteer";
   member: {
     cbId: string;
     firstName: string;
@@ -107,6 +114,7 @@ function RegistrationCard({
   const statusCfg = STATUS_CONFIG[reg.status ?? "registered"] ?? STATUS_CONFIG.registered;
   const eventDate = reg.event_detail?.event_date;
   const eventName = reg.event_detail?.name ?? "Event";
+  const isVolunteer = reg.recordType === "volunteer";
 
   return (
     <button
@@ -147,7 +155,7 @@ function RegistrationCard({
       </div>
 
       <span className="hidden shrink-0 items-center gap-1.5 rounded-xl bg-brand-primary px-3 py-2 text-xs font-extrabold text-white shadow-sm transition-all duration-200 group-hover:bg-brand-hover group-hover:shadow-md sm:inline-flex">
-        View Invite
+        {isVolunteer ? "View Confirmation" : "View Invite"}
         <ChevronRight
           size={14}
           className="transition-transform duration-200 group-hover:translate-x-0.5"
@@ -164,6 +172,7 @@ function RegistrationCard({
 export default function EventTracker({
   registrations,
   volunteerDetails,
+  participantType = "guest",
   member,
   action,
 }: EventTrackerProps) {
@@ -171,22 +180,58 @@ export default function EventTracker({
     useState<Registration | null>(null);
 
   const allEvents: Registration[] = [
-    ...(registrations ?? []),
-    ...(volunteerDetails ?? []),
+    ...(registrations ?? []).map((record) => ({
+      ...record,
+      recordType: "guest" as const,
+    })),
+    ...(volunteerDetails ?? []).map((record) => ({
+      ...record,
+      recordType: "volunteer" as const,
+    })),
   ];
 
-  const sorted = allEvents.sort(
+  const sorted = [...allEvents].sort(
     (a, b) =>
       new Date(b.created_at ?? 0).getTime() -
       new Date(a.created_at ?? 0).getTime()
   );
+  const volunteerFocused =
+    participantType === "volunteer" &&
+    (registrations?.length ?? 0) === 0;
 
   const memberName = `${member.firstName} ${member.lastName}`.trim() || "Guest";
   const selectedEvent = selectedRegistration?.event_detail;
+  const selectedIsVolunteer = selectedRegistration?.recordType === "volunteer";
   const selectedEventName = selectedEvent?.name ?? "Casa de Bloom Event";
   const selectedEventDate = selectedEvent?.event_date
     ? formatDate(selectedEvent.event_date)
     : "Date will be shared soon";
+  const trackerTitle = volunteerFocused ? "My Volunteer Events" : "My Events";
+  const emptyLabel = volunteerFocused
+    ? "No volunteer registrations yet"
+    : "No event registrations yet";
+  const countLabel = volunteerFocused
+    ? `You have ${sorted.length} volunteer registration${
+        sorted.length !== 1 ? "s" : ""
+      }`
+    : `You have ${sorted.length} event registration${
+        sorted.length !== 1 ? "s" : ""
+      }`;
+  const modalTitle = selectedIsVolunteer
+    ? "You're Confirmed as a Casa de Bloom Volunteer"
+    : "Your Casa de Bloom Invitation";
+  const modalSubtitle = selectedIsVolunteer
+    ? "Thank you for helping create a day filled with connection, generosity, and community."
+    : `This is your personal invitation, ${memberName}. We're holding your place in a day designed for connection, generosity, and community.`;
+  const numberLabel = selectedIsVolunteer
+    ? "Your Volunteer Confirmation Number"
+    : "Your Invitation Number";
+  const checkInText = selectedIsVolunteer
+    ? "Please show this at volunteer check-in."
+    : "Please bring this invitation with you.";
+  const downloadLabel = selectedIsVolunteer
+    ? "Download Confirmation"
+    : "Download Invitation";
 
   const handleDownloadInvitation = () => {
     if (!selectedRegistration) return;
@@ -199,6 +244,9 @@ export default function EventTracker({
       eventDate: selectedEventDate,
       email: member.email || "-",
       phone: member.phone || "-",
+      role: selectedIsVolunteer ? "volunteer" : "guest",
+      availability: selectedRegistration.availability,
+      contribution: selectedRegistration.skills_offered,
     });
   };
 
@@ -209,14 +257,10 @@ export default function EventTracker({
           <div>
             <h3 className="text-lg font-bold text-ui-text-main flex items-center gap-2">
               <CalendarDays className="text-brand-accent" size={20} />
-              My Events
+              {trackerTitle}
             </h3>
             <p className="text-xs text-ui-text-muted mt-1">
-              {sorted.length > 0
-                ? `You have ${sorted.length} event registration${
-                    sorted.length !== 1 ? "s" : ""
-                  }`
-                : "No event registrations yet"}
+              {sorted.length > 0 ? countLabel : emptyLabel}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -231,7 +275,7 @@ export default function EventTracker({
               className="text-ui-text-muted/40 mx-auto mb-3"
             />
             <p className="text-sm font-semibold text-ui-text-muted">
-              No events registered yet
+              {volunteerFocused ? "No volunteer events registered yet" : "No events registered yet"}
             </p>
             <p className="text-xs text-ui-text-muted/70 mt-1">
               Use the &ldquo;Register for New Event&rdquo; button to get started.
@@ -277,15 +321,21 @@ export default function EventTracker({
                     </div>
                     <div>
                       <h1 className="text-2xl font-extrabold tracking-tight text-ui-text-main">
-                        Your Casa de Bloom Invitation
+                        {modalTitle}
                       </h1>
                       <p className="mt-1 text-sm text-ui-text-muted">
-                        This is your personal invitation,{" "}
-                        <span className="font-semibold text-brand-dark">
-                          {memberName}
-                        </span>
-                        . We&apos;re holding your place in a day designed for
-                        connection, generosity, and community.
+                        {selectedIsVolunteer ? (
+                          modalSubtitle
+                        ) : (
+                          <>
+                            This is your personal invitation,{" "}
+                            <span className="font-semibold text-brand-dark">
+                              {memberName}
+                            </span>
+                            . We&apos;re holding your place in a day designed for
+                            connection, generosity, and community.
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -294,7 +344,7 @@ export default function EventTracker({
                     <div className="flex items-center gap-2 text-brand-primary">
                       <Ticket size={18} strokeWidth={2.5} />
                       <span className="text-xs font-bold uppercase tracking-widest">
-                        Your Invitation Number
+                        {numberLabel}
                       </span>
                     </div>
                     <p className="break-all font-mono text-3xl font-extrabold tracking-widest text-brand-dark sm:text-4xl">
@@ -307,7 +357,7 @@ export default function EventTracker({
                       </span>
                     </p>
                     <div className="mt-2 inline-flex items-center justify-center rounded-full bg-brand-secondary px-5 py-3 text-sm font-extrabold text-ui-text-main shadow-sm">
-                      Please bring this invitation with you.
+                      {checkInText}
                     </div>
                   </div>
                 </div>
@@ -366,6 +416,31 @@ export default function EventTracker({
                             {member.phone || "-"}
                           </p>
                         </div>
+                        {selectedIsVolunteer && (
+                          <div className="mt-3 space-y-2 rounded-2xl border border-brand-primary/15 bg-brand-light/20 p-3">
+                            <p className="text-xs font-extrabold uppercase tracking-wider text-brand-primary">
+                              Volunteer Details
+                            </p>
+                            <p className="text-sm text-ui-text-muted">
+                              <span className="font-semibold text-ui-text-main">
+                                Availability:
+                              </span>{" "}
+                              {selectedRegistration.availability || "Not provided yet"}
+                            </p>
+                            <p className="text-sm text-ui-text-muted">
+                              <span className="font-semibold text-ui-text-main">
+                                Contribution:
+                              </span>{" "}
+                              {selectedRegistration.skills_offered || "Not provided yet"}
+                            </p>
+                            <p className="text-sm text-ui-text-muted">
+                              <span className="font-semibold text-ui-text-main">
+                                Photo/video help:
+                              </span>{" "}
+                              {selectedRegistration.can_capture_media ? "Yes" : "No"}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -379,7 +454,7 @@ export default function EventTracker({
                       icon={<Download size={16} strokeWidth={2.5} />}
                       onClick={handleDownloadInvitation}
                     >
-                      Download Invitation
+                      {downloadLabel}
                     </Button>
                     <Button
                       variant="outline"

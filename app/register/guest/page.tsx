@@ -6,6 +6,7 @@ import MultiStepRegistrationForm, { CustomStep, RegistrationFormData } from "@/c
 import { fetchEvents, formatEventOption, EventOption } from "@/lib/services/events";
 import { fetchMemberMe } from "@/lib/services/auth";
 import { RegisterResponse } from "@/lib/services/register";
+import type { ProfileImage } from "@/lib/profileImages";
 
 const INITIAL_FORM_DATA = {
   eventDate: "",
@@ -22,6 +23,8 @@ const INITIAL_FORM_DATA = {
   hearAboutUs: "",
   whyAttend: "",
   communityGrill: "",
+  giveTakeContribution: "",
+  serviceOffering: "",
   spreadTheWord: false,
 };
 
@@ -127,6 +130,7 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
       colSpan: 1,
       placeholder: "21",
       requiredMessage: "Exact age is required for internal stats.",
+      invalidMessage: "Exact age must be a whole number between 21 and 120.",
     },
     {
       name: "gender",
@@ -169,7 +173,7 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
             { label: "With a Partner", value: "partner" },
             { label: "Bringing a Friend", value: "friend" },
           ],
-          requiredMessage: "Please select attendance composition.",
+          requiredMessage: "Attendance layout status is required.",
         },
         {
           name: "hearAboutUs",
@@ -185,8 +189,20 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
         },
         {
           name: "communityGrill",
-          label: "Are you bringing anything for the community grill?",
-          type: "text",
+          label: "What dish or drink are you planning to bring for the Community Potluck?",
+          type: "textarea",
+          colSpan: 2,
+        },
+        {
+          name: "giveTakeContribution",
+          label: "What might you bring for the Give & Take Table?",
+          type: "textarea",
+          colSpan: 2,
+        },
+        {
+          name: "serviceOffering",
+          label: "Would you like to offer a service, giveaway, collaboration, or creative contribution?",
+          type: "textarea",
           colSpan: 2,
         },
         {
@@ -211,6 +227,7 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [initialData, setInitialData] = useState<RegistrationFormData>(INITIAL_FORM_DATA);
+  const [initialProfileImages, setInitialProfileImages] = useState<ProfileImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -258,8 +275,11 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
             hearAboutUs: latestReg.how_heard || "",
             whyAttend: latestReg.why_attend || "",
             communityGrill: latestReg.bringing_to_grill || "",
+            giveTakeContribution: latestReg.give_take_contribution || "",
+            serviceOffering: latestReg.service_offering || "",
             spreadTheWord: latestReg.willing_to_share_social || false,
           });
+          setInitialProfileImages(profile.images ?? []);
         }
       } catch (err) {
         console.error("Profile load failed:", err);
@@ -308,6 +328,7 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
       participantType="guest"
       steps={steps}
       initialFormData={initialData}
+      initialProfileImages={initialProfileImages}
       onRegistrationComplete={onRegistrationComplete}
     />
   );

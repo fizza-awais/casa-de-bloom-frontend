@@ -1,0 +1,21 @@
+{
+  "name": "Casa de Bloom",
+  "short_name": "Casa Bloom",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#FF3F82",
+  "background_color": "#FFF8FB",
+  "display": "standalone"
+}

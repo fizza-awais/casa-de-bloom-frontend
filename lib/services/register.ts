@@ -19,9 +19,11 @@ export interface RegisterPayload {
   exact_age?: number;
   gender?: string;
   event_date: string;
+  reality_show_understood: boolean;
   community_guidelines_accepted: boolean;
   community_guidelines_version: string;
   photo_video_release_accepted: boolean;
+  positive_experience_agreed: boolean;
   age_confirmed_21_plus: boolean;
 
   // Guest specific fields
@@ -31,6 +33,8 @@ export interface RegisterPayload {
   emergency_contact?: string;
   food_allergies?: string;
   bringing_to_grill?: string;
+  give_take_contribution?: string;
+  service_offering?: string;
   willing_to_share_social?: boolean;
 
   // Volunteer specific fields
@@ -123,6 +127,8 @@ export interface RegistrationDetail {
   emergency_contact: string;
   food_allergies: string;
   bringing_to_grill: string;
+  give_take_contribution: string;
+  service_offering: string;
   willing_to_share_social: boolean;
   status: string;
   created_at: string;

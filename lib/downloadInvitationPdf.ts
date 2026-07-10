@@ -28,6 +28,27 @@ function fitText(pdf: any, value: string, maxWidth: number, fontSize: number, mi
 
 export async function downloadInvitationPdf(data: InvitationData) {
   const { jsPDF } = await import("jspdf");
+  const isVolunteer = data.role === "volunteer";
+  const documentLabel = isVolunteer ? "VOLUNTEER CONFIRMATION" : "INVITATION";
+  const documentTitle = isVolunteer
+    ? "You're Confirmed as a Casa de Bloom Volunteer"
+    : "Your Casa de Bloom Invitation";
+  const introLines = isVolunteer
+    ? [
+        `You're confirmed as a Casa de Bloom volunteer, ${data.name}.`,
+        "Thank you for helping create a day filled with connection, generosity, and community.",
+      ]
+    : [
+        `This is your personal invitation, ${data.name}.`,
+        "We are holding your place in a day designed for connection and community.",
+      ];
+  const numberLabel = isVolunteer
+    ? "YOUR VOLUNTEER CONFIRMATION NUMBER"
+    : "YOUR INVITATION NUMBER";
+  const checkInText = isVolunteer
+    ? "Please show this at volunteer check-in."
+    : "Please bring this invitation with you.";
+  const filenamePrefix = isVolunteer ? "Casa-de-Bloom-Volunteer" : "Casa-de-Bloom";
   const pdf = new jsPDF({
     unit: "pt",
     format: "letter",
@@ -36,7 +57,7 @@ export async function downloadInvitationPdf(data: InvitationData) {
 
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const filename = `Casa-de-Bloom-${sanitizeFilenamePart(data.invitationNumber)}.pdf`;
+  const filename = `${filenamePrefix}-${sanitizeFilenamePart(data.invitationNumber)}.pdf`;
 
   pdf.setFillColor("#FFF8FB");
   pdf.rect(0, 0, pageWidth, pageHeight, "F");
@@ -62,37 +83,59 @@ export async function downloadInvitationPdf(data: InvitationData) {
 
   const lift = 24;
 
+  const badgeW = isVolunteer ? 276 : 204;
   pdf.setFillColor("#FFE3EE");
-  drawRoundedRect(pdf, pageWidth / 2 - 102, 136 - lift, 204, 34, 17, "F");
+  drawRoundedRect(pdf, pageWidth / 2 - badgeW / 2, 136 - lift, badgeW, 34, 17, "F");
   pdf.setFillColor("#99CC00");
-  pdf.circle(pageWidth / 2 - 82, 153 - lift, 3, "F");
+  pdf.circle(pageWidth / 2 - badgeW / 2 + 20, 153 - lift, 3, "F");
   pdf.setTextColor("#B32B5C");
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(11);
-  pdf.text("INVITATION", pageWidth / 2, 157 - lift, {
+  pdf.text(documentLabel, pageWidth / 2, 157 - lift, {
     align: "center",
     charSpace: 2.2,
   });
 
   pdf.setTextColor("#1F1B24");
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(28);
-  pdf.text("Your Casa de Bloom Invitation", pageWidth / 2, 206 - lift, { align: "center" });
+  fitText(pdf, documentTitle, cardW - 110, 26, 17);
+  pdf.text(documentTitle, pageWidth / 2, 206 - lift, { align: "center" });
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(11);
   pdf.setTextColor("#6B7280");
-  pdf.text(`This is your personal invitation, ${data.name}.`, pageWidth / 2, 232 - lift, {
+  fitText(pdf, introLines[0], cardW - 96, 11, 8.5);
+  pdf.text(introLines[0], pageWidth / 2, 232 - lift, {
     align: "center",
   });
-  pdf.text("We are holding your place in a day designed for connection and community.", pageWidth / 2, 248 - lift, {
+  fitText(pdf, introLines[1], cardW - 96, 11, 8.5);
+  pdf.text(introLines[1], pageWidth / 2, 248 - lift, {
     align: "center",
   });
 
   const infoX = cardX + 40;
   const infoY = 272 - lift;
   const infoW = cardW - 80;
-  const infoH = 170;
+  const volunteerRows = [
+    data.availability ? ["AVAILABILITY", data.availability] : null,
+    data.contribution ? ["CONTRIBUTION", data.contribution] : null,
+  ].filter(Boolean) as string[][];
+  const guestReminderRows = isVolunteer
+    ? []
+    : [
+        ["POTLUCK", "Bring one dish and one drink."],
+        ["GIVE & TAKE", "Bring one beautiful item someone else may love."],
+      ];
+  const rows = [
+    ["EVENT", data.eventName],
+    ["DATE", data.eventDate],
+    ["NAME", data.name],
+    ["EMAIL", data.email],
+    ["PHONE", data.phone],
+    ...volunteerRows,
+    ...guestReminderRows,
+  ];
+  const infoH = 44 + rows.length * 27;
   pdf.setFillColor("#FFF8FB");
   pdf.setDrawColor("#E2E8F0");
   drawRoundedRect(pdf, infoX, infoY, infoW, infoH, 16, "FD");
@@ -100,13 +143,6 @@ export async function downloadInvitationPdf(data: InvitationData) {
   const labelX = infoX + 26;
   const valueX = infoX + infoW - 24;
   const valueMaxWidth = infoW - 150;
-  const rows = [
-    ["EVENT", data.eventName],
-    ["DATE", data.eventDate],
-    ["NAME", data.name],
-    ["EMAIL", data.email],
-    ["PHONE", data.phone],
-  ];
 
   rows.forEach(([label, value], index) => {
     const y = infoY + 32 + index * 27;
@@ -125,7 +161,7 @@ export async function downloadInvitationPdf(data: InvitationData) {
     pdf.text(value || "-", valueX, y, { align: "right" });
   });
 
-  const dividerY = 470 - lift;
+  const dividerY = infoY + infoH + 28;
   pdf.setDrawColor("#E2E8F0");
   pdf.setLineDashPattern([5, 5], 0);
   pdf.line(cardX, dividerY, cardX + cardW, dividerY);
@@ -135,7 +171,7 @@ export async function downloadInvitationPdf(data: InvitationData) {
   pdf.circle(cardX + cardW, dividerY, 10, "F");
 
   const inviteX = cardX + 40;
-  const inviteY = 512 - lift;
+  const inviteY = dividerY + 42;
   const inviteW = cardW - 80;
   const inviteH = 92;
   pdf.setFillColor("#FFE3EE");
@@ -146,7 +182,7 @@ export async function downloadInvitationPdf(data: InvitationData) {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
   pdf.setTextColor("#B32B5C");
-  pdf.text("YOUR INVITATION NUMBER", pageWidth / 2, inviteY + 28, {
+  pdf.text(numberLabel, pageWidth / 2, inviteY + 28, {
     align: "center",
     charSpace: 1.8,
   });
@@ -160,11 +196,11 @@ export async function downloadInvitationPdf(data: InvitationData) {
   pdf.text(`Member ID: ${data.cbId}`, pageWidth / 2, inviteY + 78, { align: "center" });
 
   pdf.setFillColor("#FFD23F");
-  drawRoundedRect(pdf, pageWidth / 2 - 145, 600, 290, 34, 14, "F");
+  drawRoundedRect(pdf, pageWidth / 2 - 160, inviteY + 112, 320, 34, 14, "F");
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
   pdf.setTextColor("#1F1B24");
-  pdf.text("Please bring this invitation with you.", pageWidth / 2, 621, {
+  pdf.text(checkInText, pageWidth / 2, inviteY + 133, {
     align: "center",
   });
 

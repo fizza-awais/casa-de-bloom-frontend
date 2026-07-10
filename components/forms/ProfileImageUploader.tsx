@@ -50,7 +50,7 @@ export default function ProfileImageUploader({
                 Profile Images
               </h3>
               <p className="text-xs font-medium text-ui-text-muted">
-                Optional. JPG, PNG, or WEBP up to 10MB each.
+                Upload at least 1 photo. You may add up to 6 total.
               </p>
             </div>
           </div>

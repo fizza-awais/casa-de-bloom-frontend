@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Mail, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -178,12 +179,12 @@ export default function LoginPage() {
 
         <div className="text-center mt-6 text-xs text-ui-text-muted">
           Don&apos;t have an account?{" "}
-          <button
-            onClick={() => router.push("/")}
+          <Link
+            href="/register"
             className="text-brand-primary font-bold hover:underline cursor-pointer"
           >
             Register here
-          </button>
+          </Link>
         </div>
       </div>
     </main>

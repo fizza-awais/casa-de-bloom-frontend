@@ -9,6 +9,7 @@ import MultiStepRegistrationForm, {
 import { fetchEvents, formatEventOption, EventOption } from "@/lib/services/events";
 import { fetchMemberMe } from "@/lib/services/auth";
 import { RegisterResponse } from "@/lib/services/register";
+import type { ProfileImage } from "@/lib/profileImages";
 
 function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boolean): CustomStep[] {
   const profileFields: CustomStep["fields"] = [
@@ -82,6 +83,51 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
     });
   }
 
+  profileFields.push(
+    {
+      name: "ageRange",
+      label: "Public Age Bracket",
+      type: "select",
+      required: true,
+      colSpan: 1,
+      placeholder: "Select Age Bracket",
+      options: [
+        { label: "21+", value: "21+" },
+        { label: "30+", value: "30+" },
+        { label: "40+", value: "40+" },
+        { label: "50+", value: "50+" },
+        { label: "60+", value: "60+" },
+        { label: "70+", value: "70+" },
+      ],
+      requiredMessage: "Age bracket selection is required.",
+    },
+    {
+      name: "exactAge",
+      label: "Exact Age (Private Stats Only)",
+      type: "number",
+      required: true,
+      colSpan: 1,
+      placeholder: "21",
+      requiredMessage: "Exact age is required for internal stats.",
+      invalidMessage: "Exact age must be a whole number between 21 and 120.",
+    },
+    {
+      name: "gender",
+      label: "Gender",
+      type: "select",
+      required: true,
+      colSpan: 2,
+      placeholder: "Select Gender",
+      options: [
+        { label: "Female", value: "Female" },
+        { label: "Male", value: "Male" },
+        { label: "Non-Binary", value: "Non-Binary" },
+        { label: "Prefer not to say", value: "Prefer not to say" },
+      ],
+      requiredMessage: "Gender declaration is mandatory.",
+    }
+  );
+
   profileFields.push({
     name: "instagram",
     label: "Instagram Link / Handle",
@@ -116,28 +162,32 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
     },
     {
       key: "logistics",
-      label: "Deployment & Logistics",
+      label: "How You'd Like to Contribute",
+      subtitle:
+        "Tell us how you may want to help create a beautiful Casa de Bloom experience.",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).jpeg",
       fields: [
         {
           name: "availabilityTime",
-          label: "Shift Availability Window",
-          type: "text",
+          label: "When are you available to help?",
+          type: "textarea",
+          required: true,
           colSpan: 2,
           icon: <Clock size={16} />,
-          requiredMessage: "Please specify your shift availability window hours.",
+          requiredMessage: "Please share when you are available to help.",
         },
         {
           name: "skillsContribution",
-          label: "Skills, talents, or experience you'd like to contribute",
+          label: "What skills, talents, services, or support would you like to contribute?",
           type: "textarea",
           colSpan: 2,
           icon: <Wrench size={16} />,
-          requiredMessage: "Please declare your specialized skills or execution talents.",
+          helperText:
+            "Photography, video, wellness, beauty, setup, cleanup, hosting, games, giveaways, social media, storytelling, or anything else you'd love to offer.",
         },
         {
           name: "takePhotos",
-          label: "Can you take and upload photos/videos afterwards?",
+          label: "Are you open to helping capture or upload photos/videos from the event?",
           type: "toggle",
           colSpan: 2,
         },
@@ -158,6 +208,7 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialProfileImages, setInitialProfileImages] = useState<ProfileImage[]>([]);
   const [initialData, setInitialData] = useState<RegistrationFormData>({
     eventDate: "",
     firstName: "",
@@ -166,6 +217,9 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
     phone: "",
     password: "",
     confirmPassword: "",
+    ageRange: "",
+    exactAge: "",
+    gender: "",
     instagram: "",
     availabilityTime: "",
     skillsContribution: "",
@@ -195,11 +249,15 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
             phone: profile.phone || "",
             password: "",
             confirmPassword: "",
+            ageRange: profile.age_range || "",
+            exactAge: profile.exact_age ? String(profile.exact_age) : "",
+            gender: profile.gender || "",
             instagram: profile.instagram || "",
             availabilityTime: latestVol.availability || "",
             skillsContribution: latestVol.skills_offered || "",
             takePhotos: latestVol.can_capture_media || false,
           });
+          setInitialProfileImages(profile.images ?? []);
         }
       } catch (err) {
         console.error("Data load failed:", err);
@@ -251,6 +309,7 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
       participantType="volunteer"
       steps={steps}
       initialFormData={initialData}
+      initialProfileImages={initialProfileImages}
       onRegistrationComplete={onRegistrationComplete}
     />
   );

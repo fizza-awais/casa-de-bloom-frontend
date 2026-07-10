@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense, useCallback, useEffect, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -13,6 +13,7 @@ import {
   Download,
   User,
   Phone,
+  PartyPopper,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import {
@@ -23,6 +24,39 @@ import {
 import { verifyToken } from "@/lib/services/auth";
 import { formatEventDate } from "@/lib/date";
 import { downloadInvitationPdf } from "@/lib/downloadInvitationPdf";
+
+interface ConfettiPiece {
+  id: number;
+  left: number;
+  drift: number;
+  delay: number;
+  duration: number;
+  rotate: number;
+  color: string;
+  size: number;
+}
+
+const CONFETTI_COLORS = [
+  "#FF3F82",
+  "#99CC00",
+  "#33C9DC",
+  "#FFD23F",
+  "#B32B5C",
+  "#1F1B24",
+];
+
+function buildConfettiBurst(): ConfettiPiece[] {
+  return Array.from({ length: 38 }, (_, index) => ({
+    id: Date.now() + index,
+    left: 7 + Math.random() * 86,
+    drift: -95 + Math.random() * 190,
+    delay: Math.random() * 0.25,
+    duration: 1.7 + Math.random() * 1.3,
+    rotate: -260 + Math.random() * 520,
+    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+    size: 7 + Math.random() * 7,
+  }));
+}
 
 export function ConfirmationContent() {
   const params = useSearchParams();
@@ -46,9 +80,22 @@ export function ConfirmationContent() {
   const [record, setRecord] = useState<RegistrationDetail | VolunteerDetail | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(recordId));
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
 
   // ── Refresh guard ─────────────────────────────────────────────────────────
   const [redirecting, setRedirecting] = useState(false);
+
+  const fireConfetti = useCallback(() => {
+    const burst = buildConfettiBurst();
+    setConfetti((current) => [...current.slice(-24), ...burst]);
+    window.setTimeout(() => {
+      setConfetti((current) =>
+        current.filter(
+          (piece) => !burst.some((newPiece) => newPiece.id === piece.id)
+        )
+      );
+    }, 3400);
+  }, []);
 
   useEffect(() => {
     if (recordId) return;
@@ -69,6 +116,13 @@ export function ConfirmationContent() {
     guard();
     return () => { active = false; };
   }, [recordId, router]);
+
+  useEffect(() => {
+    if (!recordId || redirecting) return;
+
+    const timer = window.setTimeout(fireConfetti, 350);
+    return () => window.clearTimeout(timer);
+  }, [fireConfetti, recordId, redirecting]);
   // ─────────────────────────────────────────────────────────────────────────
 
   // Fetch the registration/volunteer record details when a recordId is present
@@ -107,6 +161,9 @@ export function ConfirmationContent() {
       eventDate: formattedDate,
       email: displayEmail,
       phone: displayPhone,
+      role: isVolunteer ? "volunteer" : "guest",
+      availability: volunteerRecord?.availability,
+      contribution: volunteerRecord?.skills_offered,
     });
   };
 
@@ -130,8 +187,55 @@ export function ConfirmationContent() {
   const displayEmail = record?.member_detail?.email ?? params.get("email") ?? "—";
   const displayPhone = record?.member_detail?.phone ?? params.get("phone") ?? "—";
 
+  const isVolunteer = recordType === "volunteer";
+  const volunteerRecord =
+    isVolunteer && record && "skills_offered" in record ? record : null;
+  const pageTitle = isVolunteer
+    ? "You're Confirmed as a Casa de Bloom Volunteer"
+    : "Your Casa de Bloom Invitation";
+  const pageSubtitle = isVolunteer
+    ? "Thank you for helping create a day filled with connection, generosity, and community."
+    : "We're holding your place in a day designed for connection, generosity, and community.";
+  const numberLabel = isVolunteer
+    ? "Your Volunteer Confirmation Number"
+    : "Your Invitation Number";
+  const checkInText = isVolunteer
+    ? "Please show this at volunteer check-in."
+    : "Please bring this invitation with you.";
+  const emailText = isVolunteer
+    ? "with your volunteer details has been sent. Check your inbox (and spam folder)."
+    : "with your invitation details has been sent. Check your inbox (and spam folder).";
+  const dashboardCta = isVolunteer
+    ? "View Volunteer Details"
+    : "View Before You Arrive Details";
+  const downloadLabel = isVolunteer
+    ? "Download Confirmation"
+    : "Download Invitation";
+
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center font-sans overflow-x-hidden px-4 py-12 md:py-16">
+      <div
+        className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
+        aria-hidden="true"
+      >
+        {confetti.map((piece) => (
+          <span
+            key={piece.id}
+            className="absolute top-0 rounded-sm opacity-90"
+            style={
+              {
+                left: `${piece.left}%`,
+                width: `${piece.size}px`,
+                height: `${piece.size * 1.45}px`,
+                backgroundColor: piece.color,
+                animation: `confetti-fall ${piece.duration}s ease-out ${piece.delay}s forwards`,
+                "--confetti-drift": `${piece.drift}px`,
+                "--confetti-rotate": `${piece.rotate}deg`,
+              } as CSSProperties
+            }
+          />
+        ))}
+      </div>
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
           src="/assets/images/bg_image.png"
@@ -157,13 +261,20 @@ export function ConfirmationContent() {
               </div>
               <div>
                 <h1 className="text-2xl font-extrabold text-ui-text-main tracking-tight">
-                  Your Casa de Bloom Invitation
+                  {pageTitle}
                 </h1>
                 <p className="text-sm text-ui-text-muted mt-1">
-                  This is your personal invitation,{" "}
-                  <span className="font-semibold text-brand-dark">{displayName}</span>.
-                  We&apos;re holding your place in a day designed for connection,
-                  generosity, and community.
+                  {isVolunteer ? (
+                    pageSubtitle
+                  ) : (
+                    <>
+                      This is your personal invitation,{" "}
+                      <span className="font-semibold text-brand-dark">
+                        {displayName}
+                      </span>
+                      . {pageSubtitle}
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -174,7 +285,7 @@ export function ConfirmationContent() {
               <div className="flex items-center gap-2 text-brand-primary">
                 <Ticket size={18} strokeWidth={2.5} />
                 <span className="text-xs font-bold uppercase tracking-widest">
-                  Your Invitation Number
+                  {numberLabel}
                 </span>
               </div>
               <p className="text-3xl sm:text-4xl font-extrabold tracking-widest text-brand-dark font-mono">
@@ -186,7 +297,7 @@ export function ConfirmationContent() {
               </p>
               <div className="mt-2 bg-brand-sunshine rounded-xl px-4 py-2">
                 <p className="text-[12px] font-bold text-ui-text-main">
-                  Please bring this invitation with you.
+                  {checkInText}
                 </p>
               </div>
             </div>
@@ -262,7 +373,7 @@ export function ConfirmationContent() {
                   >
                     casadebloomsd@gmail.com
                   </a>{" "}
-                  with your invitation details has been sent. Check your inbox (and spam folder).
+                  {emailText}
                 </p>
               </div>
             </div>
@@ -273,20 +384,30 @@ export function ConfirmationContent() {
                 rounded="2xl"
                 fullWidth
                 size="lg"
-                icon={<Download size={16} strokeWidth={2.5} />}
-                onClick={handleDownloadInvitation}
+                icon={<Home size={16} strokeWidth={2.5} />}
+                onClick={() => router.push("/dashboard#overview")}
               >
-                Download Invitation
+                {dashboardCta}
               </Button>
               <Button
                 variant="outline"
                 rounded="2xl"
                 fullWidth
                 size="lg"
-                icon={<Home size={16} strokeWidth={2.5} />}
-                onClick={() => router.push("/dashboard#events")}
+                icon={<Download size={16} strokeWidth={2.5} />}
+                onClick={handleDownloadInvitation}
               >
-                Go to My Events
+                {downloadLabel}
+              </Button>
+              <Button
+                variant="outline"
+                rounded="2xl"
+                fullWidth
+                size="lg"
+                icon={<PartyPopper size={16} strokeWidth={2.5} />}
+                onClick={fireConfetti}
+              >
+                Celebrate
               </Button>
               <p className="text-center text-sm font-semibold text-brand-dark">
                 Come ready to make someone else&apos;s day a little brighter.
