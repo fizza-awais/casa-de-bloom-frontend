@@ -32,14 +32,14 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
   const step1Fields: CustomStep["fields"] = [
     {
       name: "eventDate",
-      label: "Targeted Event",
+      label: "Choose Your Casa de Bloom Event",
       type: "select",
       required: true,
       colSpan: 2,
       options: eventOptions,
-      placeholder: eventOptions.length ? "-- Choose an upcoming event --" : "Loading events...",
+      placeholder: eventOptions.length ? "Select an upcoming gathering" : "Loading events...",
       icon: <Calendar size={16} />,
-      requiredMessage: "Event selection is required.",
+      requiredMessage: "Please choose the Casa de Bloom event you want to attend.",
     },
     {
       name: "firstName",
@@ -77,7 +77,7 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
       required: true,
       colSpan: 1,
       icon: <Phone size={16} />,
-      requiredMessage: "Phone number is required.",
+      requiredMessage: "Phone number is required so we can reach you about event details.",
     },
   ];
 
@@ -85,21 +85,21 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
   if (!isReturningUser) {
     step1Fields.push({
       name: "password",
-      label: "Create Password",
+      label: "Create Your Login Password",
       type: "password",
       required: true,
       colSpan: 2,
       icon: <Lock size={16} />,
-      requiredMessage: "Password is required for registration.",
+      requiredMessage: "Create a password so you can return to your dashboard.",
     });
     step1Fields.push({
       name: "confirmPassword",
-      label: "Confirm Password",
+      label: "Confirm Your Password",
       type: "password",
       required: true,
       colSpan: 2,
       icon: <Lock size={16} />,
-      requiredMessage: "Confirm password is required.",
+      requiredMessage: "Please confirm your password.",
     });
   }
 
@@ -107,11 +107,11 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
   step1Fields.push(
     {
       name: "ageRange",
-      label: "Public Age Bracket",
+      label: "Public Age Range",
       type: "select",
       required: true,
       colSpan: 1,
-      placeholder: "Select Age Bracket",
+      placeholder: "Select age range",
       options: [
         { label: "21+", value: "21+" },
         { label: "30+", value: "30+" },
@@ -120,17 +120,19 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
         { label: "60+", value: "60+" },
         { label: "70+", value: "70+" },
       ],
-      requiredMessage: "Age bracket selection is required.",
+      requiredMessage: "Please choose the age range shown with your profile.",
+      helperText: "This is the age range used publicly in the Casa de Bloom community.",
     },
     {
       name: "exactAge",
-      label: "Exact Age (Private Stats Only)",
+      label: "Exact Age (Private)",
       type: "number",
       required: true,
       colSpan: 1,
       placeholder: "21",
-      requiredMessage: "Exact age is required for internal stats.",
+      requiredMessage: "Please share your exact age for private event records.",
       invalidMessage: "Exact age must be a whole number between 21 and 120.",
+      helperText: "Only the Casa de Bloom team uses this for check-in and event records.",
     },
     {
       name: "gender",
@@ -145,69 +147,76 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
         { label: "Non-Binary", value: "Non-Binary" },
         { label: "Prefer not to say", value: "Prefer not to say" },
       ],
-      requiredMessage: "Gender declaration is mandatory.",
+      requiredMessage: "Please select the option that feels right for you.",
     }
   );
 
   const steps: CustomStep[] = [
     {
       key: "identity",
-      label: "Identity & Demographics",
+      label: "Your Invitation Details",
+      subtitle: "Choose your gathering and tell us who we are welcoming.",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).jpeg",
       fields: step1Fields,
     },
     {
       key: "community",
-      label: "Community Details",
+      label: "How You'll Join the Experience",
+      subtitle: "Help us prepare the room, the potluck, and the Give & Take table.",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).jpeg",
       fields: [
         {
           name: "attendanceMode",
-          label: "Attending Layout Status",
+          label: "How are you planning to attend?",
           type: "select",
           required: true,
           colSpan: 2,
-          placeholder: "Select Attendance Composition",
+          placeholder: "Choose how you are arriving",
           options: [
-            { label: "Attending Alone", value: "alone" },
+            { label: "Coming Solo", value: "alone" },
             { label: "With a Partner", value: "partner" },
             { label: "Bringing a Friend", value: "friend" },
           ],
-          requiredMessage: "Attendance layout status is required.",
+          requiredMessage: "Please tell us how you plan to attend.",
         },
         {
           name: "hearAboutUs",
           label: "How did you hear about Casa de Bloom?",
           type: "textarea",
           colSpan: 2,
+          helperText: "Optional, but it helps us understand how the community is growing.",
         },
         {
           name: "whyAttend",
-          label: "Why would you like to attend?",
+          label: "What are you hoping to experience or connect with?",
           type: "textarea",
           colSpan: 2,
+          helperText: "Optional. Share what would make the day meaningful for you.",
         },
         {
           name: "communityGrill",
-          label: "What dish or drink are you planning to bring for the Community Potluck?",
+          label: "What dish or drink are you excited to bring for the Community Potluck?",
           type: "textarea",
           colSpan: 2,
+          helperText: "This helps us build one generous table together. You can update your plan later.",
         },
         {
           name: "giveTakeContribution",
-          label: "What might you bring for the Give & Take Table?",
+          label: "What beautiful item might you bring for the Give & Take Table?",
           type: "textarea",
           colSpan: 2,
+          helperText: "Optional. Choose something someone else may love.",
         },
         {
           name: "serviceOffering",
-          label: "Would you like to offer a service, giveaway, collaboration, or creative contribution?",
+          label: "Any service, giveaway, collaboration, or creative contribution you'd love to offer?",
           type: "textarea",
           colSpan: 2,
+          helperText: "Optional. Demos, samples, games, wellness, beauty, art, hosting, or anything generous counts.",
         },
         {
           name: "spreadTheWord",
-          label: "Willing to help spread the word on social media?",
+          label: "Open to sharing Casa de Bloom with your community?",
           type: "toggle",
           colSpan: 2,
         },
@@ -303,7 +312,7 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md rounded-2xl border border-ui-border bg-ui-card/80 p-6 text-center shadow-sm">
-          <h1 className="text-2xl font-extrabold text-ui-text-main">Guest Registration</h1>
+          <h1 className="text-2xl font-extrabold text-ui-text-main">Your Casa de Bloom Invitation</h1>
           <p className="mt-2 text-sm text-ui-text-muted">{eventsError}</p>
         </div>
       </main>
@@ -315,7 +324,7 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="flex flex-col items-center gap-2">
           <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-semibold text-ui-text-muted">Loading registration details...</span>
+          <span className="text-sm font-semibold text-ui-text-muted">Preparing your invitation details...</span>
         </div>
       </main>
     );
@@ -324,12 +333,13 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
   return (
     <MultiStepRegistrationForm
       key={isReturningUser ? "returning" : "new"}
-      title="Guest Registration"
+      title="Your Casa de Bloom Invitation"
       participantType="guest"
       steps={steps}
       initialFormData={initialData}
       initialProfileImages={initialProfileImages}
       onRegistrationComplete={onRegistrationComplete}
+      finalSubmitLabel="Create My Invitation"
     />
   );
 }

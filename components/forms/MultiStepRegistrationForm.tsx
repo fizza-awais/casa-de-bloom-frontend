@@ -72,11 +72,13 @@ interface MultiStepRegistrationFormProps {
     formData: RegistrationFormData
   ) => void;
   initialProfileImages?: ProfileImage[];
+  finalSubmitLabel?: string;
 }
 
 const COMPLIANCE_STEP = {
   key: "compliance" as const,
   label: "Final Confirmations",
+  subtitle: "Confirm the essentials before we save your place.",
   img: "/assets/images/WhatsApp Image 2026-06-16 at 2.56.56 AM (3).jpeg",
 };
 
@@ -122,6 +124,7 @@ export default function MultiStepRegistrationForm({
   onSubmit,
   onRegistrationComplete,
   initialProfileImages = [],
+  finalSubmitLabel = "I'm Ready for Casa de Bloom.",
 }: MultiStepRegistrationFormProps) {
   const router = useRouter();
   const [visiblePasswords, setVisiblePasswords] = useState<
@@ -995,7 +998,7 @@ export default function MultiStepRegistrationForm({
                         : "Submitting..."}
                     </span>
                   ) : isLastStep ? (
-                    "I'm Ready for Casa de Bloom."
+                    finalSubmitLabel
                   ) : (
                     "Continue"
                   )}

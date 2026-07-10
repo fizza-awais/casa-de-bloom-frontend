@@ -12,15 +12,15 @@ interface ComplianceStepProps {
 const CHECKBOX_ITEMS = [
   {
     id: "reality_show_understood",
-    label: "I understand Casa de Bloom is a community-centered Reality Show. *",
+    label: "I understand Casa de Bloom is a community-centered reality show experience. *",
   },
   {
     id: "photoReleaseAccepted",
-    label: "I understand photos and videos will be taken. *",
+    label: "I understand photos and videos may be captured during the event. *",
   },
   {
     id: "positive_experience_agreed",
-    label: "I agree to help create a positive experience for everyone. *",
+    label: "I agree to help create a welcoming, respectful, and positive experience. *",
   },
   {
     id: "ageConfirmed",
@@ -50,7 +50,7 @@ export default function ComplianceStep({
           Final Confirmations
         </p>
         <p className="text-xs sm:text-sm leading-relaxed text-ui-text-main">
-          These are the last things to confirm before we create your invitation. The full Community Guidelines & Terms stay available{" "}
+          A few final promises before we create your invitation. The full Community Guidelines & Terms stay available{" "}
           <Link
             href="/comminut-guidelines"
             target="_blank"
@@ -92,7 +92,7 @@ export default function ComplianceStep({
             onChange={(e) => handleSelectAll(e.target.checked)}
             className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded accent-brand-primary"
           />
-          <span>Accept all</span>
+          <span>Accept all confirmations</span>
         </label>
       </div>
     </div>

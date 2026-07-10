@@ -47,10 +47,10 @@ export default function ProfileImageUploader({
             </span>
             <div>
               <h3 className="text-sm font-bold text-ui-text-main">
-                Profile Images
+                Your Photos
               </h3>
               <p className="text-xs font-medium text-ui-text-muted">
-                Upload at least 1 photo. You may add up to 6 total.
+                Upload at least 1 clear photo. You may add up to 6 total.
               </p>
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function ProfileImageUploader({
           ].join(" ")}
         >
           <ImagePlus size={16} />
-          Add Images
+          Add Photos
           <input
             type="file"
             accept={PROFILE_IMAGE_ACCEPT}
@@ -82,7 +82,7 @@ export default function ProfileImageUploader({
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold">
         <span className="rounded-full border border-brand-accent/20 bg-brand-accent/10 px-3 py-1 text-brand-accent">
-          {currentCount}/{PROFILE_IMAGE_LIMIT} selected
+          {currentCount}/{PROFILE_IMAGE_LIMIT} photos selected
         </span>
       </div>
 
