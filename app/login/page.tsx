@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Mail, Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
+import { Mail, Loader2, Eye, EyeOff } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { API_URL } from "@/lib/api";
 
@@ -35,9 +35,22 @@ export default function LoginPage() {
         throw new Error(errData.error || "Invalid email or password.");
       }
 
-      router.push("/dashboard");
-    } catch (err: any) {
-      setError(err?.message || "An unexpected error occurred. Please try again.");
+      const sessionResponse = await fetch("/api/auth/session/", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (!sessionResponse.ok) {
+        throw new Error(
+          "We could not start your session. Please refresh and try again.",
+        );
+      }
+
+      router.replace("/dashboard");
+      router.refresh();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -158,7 +171,7 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center mt-6 text-xs text-ui-text-muted">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <button
             onClick={() => router.push("/")}
             className="text-brand-primary font-bold hover:underline cursor-pointer"

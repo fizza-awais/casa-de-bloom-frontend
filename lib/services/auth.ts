@@ -74,6 +74,7 @@ export async function verifyToken(cookieHeader?: string): Promise<{ valid: boole
     const res = await fetch(url, {
       method: "POST",
       headers,
+      credentials: "include",
       cache: "no-store",
     });
 
@@ -101,6 +102,7 @@ export async function refreshToken(cookieHeader?: string): Promise<{ success: bo
     const res = await fetch(url, {
       method: "POST",
       headers,
+      credentials: "include",
       cache: "no-store",
     });
 
@@ -133,6 +135,7 @@ export async function fetchMemberMe(cookieHeader?: string): Promise<MemberProfil
     const res = await fetch(url, {
       method: "GET",
       headers,
+      credentials: "include",
       cache: "no-store",
     });
 
