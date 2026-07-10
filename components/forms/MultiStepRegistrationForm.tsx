@@ -483,6 +483,7 @@ export default function MultiStepRegistrationForm({
     const validationError = validateProfileImageFiles({
       files,
       currentCount: initialProfileImages.length + selectedImages.length,
+      currentFiles: selectedImages.map((image) => image.file),
     });
     if (validationError) {
       setImageError(validationError);

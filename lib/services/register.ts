@@ -1,5 +1,8 @@
 import { API_URL } from "../api";
-import { appendProfileFields } from "../profileImages";
+import {
+  appendProfileFields,
+  PROFILE_IMAGE_REQUEST_TOO_LARGE_MESSAGE,
+} from "../profileImages";
 
 export interface RegisterPayload {
   participant_type: "guest" | "volunteer";
@@ -226,6 +229,9 @@ export async function registerMember(
 
   if (!response.ok) {
     let errorMessage = "Something went wrong. Please try again.";
+    if (response.status === 413) {
+      throw new Error(PROFILE_IMAGE_REQUEST_TOO_LARGE_MESSAGE);
+    }
     try {
       const errorData = await response.json();
       if (errorData && typeof errorData === "object") {

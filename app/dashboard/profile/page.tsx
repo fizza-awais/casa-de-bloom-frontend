@@ -231,6 +231,7 @@ export default function ProfilePage() {
     const validationError = validateProfileImageFiles({
       files,
       currentCount: existingActiveCount + selectedImages.length,
+      currentFiles: selectedImages.map((image) => image.file),
     });
 
     if (validationError) {

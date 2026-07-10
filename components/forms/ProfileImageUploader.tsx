@@ -4,9 +4,11 @@ import { ImagePlus, Trash2, Undo2, X } from "lucide-react";
 import {
   canPreviewProfileImage,
   getProfileImageExtension,
+  formatProfileImageSize,
   PROFILE_IMAGE_ACCEPT,
   PROFILE_IMAGE_FORMAT_LABEL,
   PROFILE_IMAGE_LIMIT,
+  PROFILE_IMAGE_TOTAL_MAX_SIZE,
   ProfileImage,
   SelectedProfileImage,
 } from "@/lib/profileImages";
@@ -56,7 +58,8 @@ export default function ProfileImageUploader({
                 Upload at least 1 clear photo. You may add up to 6 total.
               </p>
               <p className="mt-0.5 text-[11px] font-medium text-ui-text-muted">
-                Supports {PROFILE_IMAGE_FORMAT_LABEL}.
+                Supports {PROFILE_IMAGE_FORMAT_LABEL}. Keep new uploads under{" "}
+                {formatProfileImageSize(PROFILE_IMAGE_TOTAL_MAX_SIZE)} combined.
               </p>
             </div>
           </div>
