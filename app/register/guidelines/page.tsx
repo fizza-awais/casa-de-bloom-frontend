@@ -64,13 +64,13 @@ export default function GuidelinesPage() {
             <hr className="border-ui-border" />
 
             <section className="space-y-2">
-              <h2 className="font-bold text-base text-brand-dark uppercase tracking-wider">3. Registration Donations & Cancellations</h2>
+              <h2 className="font-bold text-base text-brand-dark uppercase tracking-wider">3. Optional Donations & Cancellations</h2>
               <p>
-                All registration donations are non-refundable. If you are unable to attend an event, you may either:
+                Optional donations are non-refundable. If you are unable to attend an event, you may either:
               </p>
               <ul className="list-disc list-inside ml-2 space-y-1">
                 <li>Transfer your invitation to a friend by notifying our team in advance.</li>
-                <li>Apply your donation toward a future Casa de Bloom event.</li>
+                <li>Contact our team about applying your support toward a future Casa de Bloom event.</li>
               </ul>
               <p>
                 Please email us as soon as possible if your plans change so we can update our guest list accordingly. Thank you for helping us plan and prepare the best possible experience for our community.
@@ -209,12 +209,12 @@ export default function GuidelinesPage() {
             <hr className="border-ui-border" />
 
             <section className="space-y-2">
-              <h2 className="font-bold text-base text-brand-dark uppercase tracking-wider">17. Registration Donations & Kiwi Love</h2>
+              <h2 className="font-bold text-base text-brand-dark uppercase tracking-wider">17. Optional Donations & Kiwi Love</h2>
               <p>
-                Your registration donation helps support event setup, refreshments, staffing, guest gifts, Kiwi Spa experiences, Marketplace development, cleanup, and future community programs.
+                Donations are welcome. Your support helps cover event setup, cleanup, complimentary Kiwi Spa services, guest gifts, future community events, marketplace development, and community initiatives.
               </p>
               <p>
-                KIWI Love is our official nonprofit initiative supporting local dog rescue organizations and shelters. Guests who would like to help may make optional donations directly to KIWI Love through designated QR codes available on the dashboard and at the event. These donations are separate from event registration donations. Participation is entirely optional, but deeply appreciated by the animals, shelters, and community organizations we support.
+                KIWI Love is our official nonprofit initiative supporting local dog rescue organizations and shelters. Guests who would like to help may make optional donations directly to KIWI Love through designated QR codes available on the dashboard and at the event. These donations are separate from Casa de Bloom event support. Participation is entirely optional, but deeply appreciated by the animals, shelters, and community organizations we support.
               </p>
             </section>
 

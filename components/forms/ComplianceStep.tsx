@@ -12,15 +12,15 @@ interface ComplianceStepProps {
 const CHECKBOX_ITEMS = [
   {
     id: "reality_show_understood",
-    label: "I understand Casa de Bloom is a community-centered reality show experience. *",
+    label: "I understand Casa de Bloom is a community-centered Reality Show. *",
   },
   {
     id: "photoReleaseAccepted",
-    label: "I understand photos and videos may be captured during the event. *",
+    label: "I understand photos and videos will be taken. *",
   },
   {
     id: "positive_experience_agreed",
-    label: "I agree to help create a welcoming, respectful, and positive experience. *",
+    label: "I agree to help create a positive experience for everyone. *",
   },
   {
     id: "ageConfirmed",

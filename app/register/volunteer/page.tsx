@@ -15,13 +15,13 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
   const profileFields: CustomStep["fields"] = [
     {
       name: "eventDate",
-      label: "Select Target Shift Event",
+      label: "Choose Your Casa de Bloom Event",
       type: "select",
       required: true,
       colSpan: 2,
       options: eventOptions,
-      placeholder: eventOptions.length ? "-- Choose an event alignment --" : "Loading events...",
-      requiredMessage: "Please select an event alignment date.",
+      placeholder: eventOptions.length ? "Select an upcoming gathering" : "Loading events...",
+      requiredMessage: "Please choose the Casa de Bloom event you want to support.",
     },
     {
       name: "firstName",
@@ -156,7 +156,7 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
   return [
     {
       key: "profile",
-      label: "Identity Profile",
+      label: "Your Volunteer Profile",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).jpeg",
       fields: profileFields,
     },
@@ -183,7 +183,7 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
           colSpan: 2,
           icon: <Wrench size={16} />,
           helperText:
-            "Photography, video, wellness, beauty, setup, cleanup, hosting, games, giveaways, social media, storytelling, or anything else you'd love to offer.",
+            "Strongly encouraged: Photography, video, wellness, beauty, setup, cleanup, hosting, games, giveaways, social media, storytelling, or anything else you'd love to offer.",
         },
         {
           name: "takePhotos",
