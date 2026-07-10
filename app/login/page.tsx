@@ -14,11 +14,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+    setIsRedirecting(false);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/login/`, {
@@ -35,23 +37,12 @@ export default function LoginPage() {
         throw new Error(errData.error || "Invalid email or password.");
       }
 
-      const sessionResponse = await fetch("/api/auth/session/", {
-        method: "POST",
-        credentials: "include",
-        cache: "no-store",
-      });
-
-      if (!sessionResponse.ok) {
-        throw new Error(
-          "We could not start your session. Please refresh and try again.",
-        );
-      }
-
+      setIsRedirecting(true);
       router.replace("/dashboard");
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
-    } finally {
+      setIsRedirecting(false);
       setIsSubmitting(false);
     }
   };
@@ -161,7 +152,7 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 size={16} className="animate-spin" />
-                  Logging in...
+                  {isRedirecting ? "Opening dashboard..." : "Logging in..."}
                 </span>
               ) : (
                 "Log In"
