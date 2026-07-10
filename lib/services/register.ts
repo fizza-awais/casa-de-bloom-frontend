@@ -1,11 +1,13 @@
 import { API_URL } from "../api";
+import { appendProfileFields } from "../profileImages";
 
 export interface RegisterPayload {
   participant_type: "guest" | "volunteer";
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone?: string;
+  password?: string;
   facebook?: string;
   instagram?: string;
   linkedin?: string;
@@ -14,6 +16,7 @@ export interface RegisterPayload {
   business_name?: string;
   city?: string;
   age_range?: string;
+  exact_age?: number;
   gender?: string;
   event_date: string;
   community_guidelines_accepted: boolean;
@@ -36,6 +39,10 @@ export interface RegisterPayload {
   can_capture_media?: boolean;
 }
 
+export interface RegisterMemberOptions {
+  images?: File[];
+}
+
 export interface RegisterResponse {
   cb_id: string;
   invitation_number: string;
@@ -45,6 +52,35 @@ export interface RegisterResponse {
   volunteer_id?: string;
   record_type: "registration" | "volunteer";
   record_id: string;
+}
+
+interface RegistrationCheckApiResponse {
+  email?: string;
+  event?: string;
+  event_id?: string;
+  event_date?: string;
+  already_registered?: boolean;
+  email_exists?: boolean;
+  registered?: boolean;
+  exists?: boolean;
+  email_registered?: boolean;
+  available?: boolean;
+  registration_type?: "registration" | "volunteer" | null;
+}
+
+export interface RegistrationCheckResult {
+  isRegistered: boolean;
+  emailExists: boolean;
+}
+
+export class RegistrationCheckError extends Error {
+  field?: "email" | "eventDate";
+
+  constructor(message: string, field?: "email" | "eventDate") {
+    super(message);
+    this.name = "RegistrationCheckError";
+    this.field = field;
+  }
 }
 
 export interface RegistrationMemberDetail {
@@ -62,6 +98,7 @@ export interface RegistrationMemberDetail {
   business_name: string;
   city: string;
   age_range: string;
+  exact_age: number | null;
   gender: string;
   participant_type: "guest" | "volunteer";
   created_at: string;
@@ -104,13 +141,81 @@ export interface VolunteerDetail {
   event_detail: RegistrationEventDetail;
 }
 
-export async function registerMember(payload: RegisterPayload): Promise<RegisterResponse> {
-  const response = await fetch(`${API_URL}/api/register/`, {
+export async function checkRegistrationEmail(
+  email: string,
+  eventDate: string,
+  participantType: "guest" | "volunteer",
+): Promise<RegistrationCheckResult> {
+  const response = await fetch(`${API_URL}/api/registration/check/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    credentials: "include",
+    body: JSON.stringify({
+      email,
+      event_date: eventDate,
+      participant_type: participantType,
+    }),
+  });
+
+  let data: RegistrationCheckApiResponse | null = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const field = data?.email ? "email" : data?.event ? "eventDate" : undefined;
+    const message =
+      field === "email"
+        ? "Enter a valid email address."
+        : field === "eventDate"
+          ? "Please choose a valid upcoming event."
+          : "Unable to check registration availability right now. Please try again.";
+
+    throw new RegistrationCheckError(
+      message,
+      field,
+    );
+  }
+
+  const isRegistered =
+    data?.already_registered ??
+    data?.registered ??
+    data?.email_registered ??
+    (typeof data?.available === "boolean" ? !data.available : false);
+  const emailExists = data?.email_exists ?? data?.exists ?? isRegistered;
+
+  return {
+    isRegistered,
+    emailExists,
+  };
+}
+
+export async function registerMember(
+  payload: RegisterPayload,
+  options: RegisterMemberOptions = {},
+): Promise<RegisterResponse> {
+  const hasImages = !!options.images?.length;
+  const body = hasImages ? new FormData() : JSON.stringify(payload);
+  const headers: HeadersInit = hasImages
+    ? {}
+    : {
+        "Content-Type": "application/json",
+      };
+
+  if (body instanceof FormData) {
+    appendProfileFields(body, payload);
+    options.images?.forEach((image) => body.append("images", image));
+  }
+
+  const response = await fetch(`${API_URL}/api/register/`, {
+    method: "POST",
+    headers,
+    credentials: "include",
+    body,
   });
 
   if (!response.ok) {
@@ -119,7 +224,7 @@ export async function registerMember(payload: RegisterPayload): Promise<Register
       const errorData = await response.json();
       if (errorData && typeof errorData === "object") {
         // If it is a dictionary of field errors, map them to a friendly message
-        const messages = Object.entries(errorData).map(([key, val]) => {
+        const messages = Object.values(errorData).map((val) => {
           if (Array.isArray(val)) {
             return val.join(" ");
           }

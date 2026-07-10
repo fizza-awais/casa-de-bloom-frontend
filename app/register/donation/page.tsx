@@ -2,8 +2,10 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useRef } from "react";
 import Button from "@/components/ui/Button";
+import { Info } from "lucide-react";
+import { RegistrationFlowDetails } from "@/lib/registrationFlow";
 
 const QR_METHODS = [
   {
@@ -29,40 +31,47 @@ const QR_METHODS = [
   },
 ];
 
-function DonationContent() {
-  const params = useSearchParams();
-  const router = useRouter();
+interface DonationViewProps {
+  details: RegistrationFlowDetails;
+  onContinue?: (details: RegistrationFlowDetails) => void;
+}
 
-  const invitationNumber = params.get("invitationNumber") ?? "";
-  const cbId = params.get("cbId") ?? "";
-  const name = params.get("name") ?? "";
-  const eventDate = params.get("eventDate") ?? "";
-  const participantType = params.get("participantType") ?? "";
-  const recordType = params.get("recordType") ?? "";
-  const recordId = params.get("recordId") ?? "";
+export function DonationView({ details, onContinue }: DonationViewProps) {
+  const router = useRouter();
+  const supportSectionRef = useRef<HTMLDivElement>(null);
 
   const [selectedMethod, setSelectedMethod] = useState<"venmo" | "zelle" | "paypal" | null>("venmo");
 
   const handleContinue = () => {
+    if (onContinue) {
+      onContinue(details);
+      return;
+    }
+
     const query = new URLSearchParams({
-      invitationNumber,
-      cbId,
-      name,
-      eventDate,
-      participantType,
-      recordType,
-      recordId,
-      registrationId: params.get("registrationId") ?? "",
-      volunteerId: params.get("volunteerId") ?? "",
+      invitationNumber: details.invitationNumber,
+      cbId: details.cbId,
+      name: details.name,
+      eventDate: details.eventDate ?? "",
+      participantType: details.participantType,
+      recordType: details.recordType,
+      recordId: details.recordId,
+      registrationId: details.registrationId ?? "",
+      volunteerId: details.volunteerId ?? "",
+      email: details.email ?? "",
+      phone: details.phone ?? "",
     });
     router.push(`/register/confirmation?${query.toString()}`);
+  };
+
+  const scrollToSupport = () => {
+    supportSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const currentMethodDetails = QR_METHODS.find((m) => m.key === selectedMethod);
 
   return (
-    // 1. Reduced vertical layout padding from py-12 to lg:py-4 to prevent pushing things out of view
-    <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-4">
+    <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-12">
       
       {/* Background System */}
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -80,135 +89,170 @@ function DonationContent() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/35 mix-blend-multiply" />
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl">
-        {/* 2. Tightened outer modal padding down to p-6 on desktop screens */}
-        <div className="bg-white/88 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 lg:p-6 shadow-[0_32px_64px_rgba(31,27,36,0.18)] border border-white/70">
-          {/* 3. Reduced gap sizes inside the grid */}
-          <div className="grid gap-6 lg:gap-8 lg:grid-cols-[0.95fr_1.05fr] items-stretch">
+      <div className="relative z-10 w-full max-w-2xl">
+        <div className="bg-white/88 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 shadow-[0_32px_64px_rgba(31,27,36,0.18)] border border-white/70 space-y-8">
+          
+          {/* Welcome Header */}
+          <header className="text-center space-y-2">
+            <h1 className="text-4xl font-extrabold text-brand-primary tracking-tight">
+              You're In!
+            </h1>
+            <p className="text-base sm:text-lg text-ui-text-main font-medium max-w-xl mx-auto leading-relaxed">
+              Welcome to Casa de Bloom. We’re so excited to spend the day with you.
+            </p>
+          </header>
+
+          <section className="space-y-4 rounded-3xl border border-brand-primary/10 bg-brand-light/10 p-5 md:p-6 transition-all duration-300">
+            <div className="text-center space-y-1">
+              <h2 className="text-lg font-bold text-brand-primary">
+                How donations help
+              </h2>
+              <p className="mx-auto max-w-md text-xs leading-relaxed text-ui-text-muted">
+                Registration support helps with event setup, cleanup, refreshments, guest gifts, Kiwi Spa experiences, and the little details that make the day feel special. Giving is always optional.
+              </p>
+            </div>
+
+            {/* Payment Method Tabs */}
+            <div className="rounded-2xl border border-ui-border bg-white/50 p-2">
+              <div className="grid grid-cols-3 gap-2">
+                {QR_METHODS.map((method) => {
+                  const isSelected = selectedMethod === method.key;
+                  return (
+                    <button
+                      key={method.key}
+                      type="button"
+                      onClick={() => setSelectedMethod(method.key)}
+                      className={[
+                        "flex items-center justify-center py-2 px-3 rounded-lg border transition-all duration-200 focus:outline-none cursor-pointer text-center font-bold text-xs",
+                        isSelected
+                          ? "border-brand-primary shadow-sm scale-[1.01] ring-2 ring-brand-primary/10"
+                          : "border-ui-border hover:border-brand-primary/20 bg-white",
+                      ].join(" ")}
+                      style={isSelected ? { background: method.bg, color: method.color } : {}}
+                    >
+                      {method.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* QR Code Container */}
+            <div className="rounded-2xl border border-ui-border bg-white/70 p-4 flex flex-col items-center justify-center min-h-[260px]">
+              {currentMethodDetails ? (
+                <div className="flex flex-col items-center gap-2.5 w-full">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-ui-text-muted text-center">
+                    Scan to support via {currentMethodDetails.label}
+                  </p>
+                  <div className="relative w-48 h-48 rounded-2xl overflow-hidden shadow-sm border-2 border-white bg-white">
+                    <Image
+                      src={currentMethodDetails.src}
+                      alt={`${currentMethodDetails.label} QR Code`}
+                      fill
+                      sizes="192px"
+                      className="object-contain p-2"
+                      priority
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-ui-text-muted">Please select a payment method above</p>
+              )}
+            </div>
+          </section>
+
+          {/* Kiwi Love Section */}
+          <section className="rounded-3xl border-2 border-dashed border-brand-secondary/30 bg-brand-secondary/5 p-5 md:p-6 flex flex-col sm:flex-row items-center gap-5 md:gap-6">
+            <div className="flex-1 space-y-2 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <span className="text-lg">🐾</span>
+                <h3 className="text-xs font-bold text-brand-secondary uppercase tracking-widest">
+                  Kiwi Love Optional Donation
+                </h3>
+              </div>
+              <p className="text-xs text-ui-text-main leading-relaxed">
+                KIWI Love supports local dog rescue organizations and shelters. This is a separate optional donation, and 100% goes directly to the animals.
+              </p>
+            </div>
             
-            {/* Left Column */}
-            {/* 4. Reduced gap-6 to lg:gap-4 for tighter text distribution */}
-            <section className="flex flex-col gap-4 lg:gap-3.5">
-              <div className="space-y-3 lg:space-y-2">
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-brand-primary uppercase tracking-[0.25em]">
-                    Support Casa de Bloom
-                  </h4>
-                  <h1 className="text-2xl sm:text-3xl lg:text-2xl font-extrabold text-ui-text-main tracking-tight leading-tight max-w-xl">
-                    Help us grow the community
-                  </h1>
-                </div>
-                <p className="max-w-xl text-xs sm:text-sm text-ui-text-muted leading-relaxed">
-                  Registration donations help us cover event setup, refreshments,
-                  staffing, guest gifts, and Kiwi Spa experiences. Giving is always
-                  optional, and you can continue without donating.
-                </p>
-              </div>
+            <div className="relative w-28 h-28 rounded-2xl overflow-hidden shadow-sm border-2 border-white bg-white flex-shrink-0">
+              <Image
+                src="/assets/images/kiwi_love_qr.png"
+                alt="Kiwi Love Dog Rescue QR Code"
+                fill
+                sizes="112px"
+                className="object-contain p-2"
+              />
+            </div>
+          </section>
 
-              <div className="rounded-2xl border border-brand-primary/20 bg-brand-light/25 p-4 lg:p-3.5">
-                <p className="text-xs font-semibold text-brand-dark uppercase tracking-wide">
-                  Registration donations are non-refundable.
-                </p>
-                <p className="mt-1 text-xs sm:text-sm text-ui-text-main leading-relaxed">
-                  You can choose any method on the right, or skip this step and go straight
-                  to your invitation ticket.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border-2 border-dashed border-brand-secondary/35 bg-brand-secondary/5 p-4 lg:p-3.5 space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🐾</span>
-                  <div>
-                    <p className="text-xs font-bold text-brand-secondary uppercase tracking-widest">
-                      Optional - Kiwi Love Nonprofit
-                    </p>
-                    <p className="text-[10px] text-ui-text-muted">
-                      Dog rescue and local shelter support
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs sm:text-sm text-ui-text-main leading-relaxed">
-                  KIWI Love supports local dog rescue organizations and shelters. This
-                  is a separate optional donation, and 100% goes directly to the animals.
-                </p>
-              </div>
-
-              <div className="space-y-2 pt-2 mt-auto">
-                <Button
-                  type="button"
-                  variant="primary"
-                  rounded="xl"
-                  fullWidth
-                  size="md"
-                  onClick={handleContinue}
-                >
-                  Skip
-                </Button>
-                <p className="text-[10px] text-ui-text-muted text-left leading-relaxed max-w-md">
-                  Donation is completely voluntary. You can scan the code above to support us, or simply skip to view your invitation ticket.
-                </p>
-              </div>
-            </section>
-
-            {/* Right Column */}
-            <section className="flex flex-col gap-4">
-              <div className="rounded-3xl border border-ui-border bg-ui-bg/20 p-4 lg:p-3.5">
-                <p className="text-xs font-bold text-ui-text-muted uppercase tracking-wider mb-3">
-                  Select a payment method
-                </p>
-                <div className="grid grid-cols-3 gap-3">
-                  {QR_METHODS.map((method) => {
-                    const isSelected = selectedMethod === method.key;
-                    return (
-                      <button
-                        key={method.key}
-                        type="button"
-                        onClick={() => setSelectedMethod(method.key)}
-                        className={[
-                          "flex items-center justify-center py-2.5 px-4 rounded-xl border-2 transition-all duration-200 focus:outline-none cursor-pointer text-center font-bold text-xs",
-                          isSelected
-                            ? "border-brand-primary shadow-md scale-[1.02] ring-2 ring-brand-primary/15"
-                            : "border-ui-border hover:border-brand-primary/40",
-                        ].join(" ")}
-                        style={{ background: method.bg, color: method.color }}
-                      >
-                        {method.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 5. Reduced min-h from 420px down to lg:min-h-[340px] */}
-              <div className="flex-1 rounded-[2rem] border border-ui-border bg-white/75 p-4 flex flex-col items-center justify-center min-h-[360px] lg:min-h-[330px]">
-                {currentMethodDetails ? (
-                  <div className="flex flex-col items-center gap-3 w-full">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-ui-text-muted text-center">
-                      Scan QR code to pay via {currentMethodDetails.label}
-                    </p>
-
-                    {/* 6. Scaled down the QR image size wrapper on desktop to safely prevent overflows */}
-                    <div className="relative w-64 h-64 lg:w-60 lg:h-60 rounded-[1.75rem] overflow-hidden shadow-lg border-4 border-white bg-white">
-                      <Image
-                        src={currentMethodDetails.src}
-                        alt={`${currentMethodDetails.label} QR Code`}
-                        fill
-                        sizes="(max-width: 640px) 256px, 240px"
-                        className="object-contain p-3"
-                        priority
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-xs text-ui-text-muted">Please select a payment method above</p>
-                )}
-              </div>
-            </section>
-
+          {/* Action Buttons */}
+          <div className="space-y-4 pt-2">
+            <Button
+              type="button"
+              variant="primary"
+              rounded="xl"
+              fullWidth
+              size="lg"
+              onClick={handleContinue}
+              disabled={!details.invitationNumber}
+            >
+              Continue to My Invitation
+            </Button>
+            
+            <div className="text-center">
+              <Button
+                type="button"
+                onClick={scrollToSupport}
+                variant="outline"
+                rounded="xl"
+                size="md"
+              >
+                Support Casa de Bloom (Optional)
+              </Button>
+            </div>
           </div>
+
+          {/* Low-priority non-refundable notice */}
+          <footer className="text-center">
+            <p className="text-[10px] text-ui-text-muted/70 flex items-center gap-2 justify-center">
+              <Info size={14} />Registration donations are non-refundable.
+            </p>
+          </footer>
+
         </div>
       </div>
     </main>
+  );
+}
+
+function DonationContent() {
+  const params = useSearchParams();
+  const recordType = (params.get("recordType") ??
+    (params.get("participantType") === "volunteer" ? "volunteer" : "registration")) as
+    | "registration"
+    | "volunteer";
+
+  return (
+    <DonationView
+      details={{
+        invitationNumber: params.get("invitationNumber") ?? "",
+        cbId: params.get("cbId") ?? "",
+        name: params.get("name") ?? "",
+        eventDate: params.get("eventDate") ?? "",
+        participantType: params.get("participantType") ?? "",
+        recordType,
+        recordId:
+          params.get("recordId") ??
+          params.get("registrationId") ??
+          params.get("volunteerId") ??
+          "",
+        registrationId: params.get("registrationId") ?? "",
+        volunteerId: params.get("volunteerId") ?? "",
+        email: params.get("email") ?? "",
+        phone: params.get("phone") ?? "",
+      }}
+    />
   );
 }
 

@@ -106,3 +106,135 @@ body {
 input:focus, select:focus, textarea:focus {
   outline: none;
 }
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--confetti-drift), 420px, 0) rotate(var(--confetti-rotate));
+  }
+}
+
+@keyframes dashboard-rise-in {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes dashboard-soft-pulse {
+  0%, 100% {
+    box-shadow: 0 1px 2px rgb(31 27 36 / 0.06);
+  }
+  50% {
+    box-shadow: 0 14px 34px rgb(255 63 130 / 0.12);
+  }
+}
+
+@keyframes dashboard-shine {
+  0% {
+    transform: translateX(-130%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+  }
+}
+
+@keyframes dashboard-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes dashboard-value-swap {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.dashboard-reveal {
+  animation: dashboard-rise-in 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--dashboard-delay, 0ms);
+}
+
+.dashboard-interactive-card {
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.dashboard-interactive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgb(31 27 36 / 0.1);
+}
+
+.dashboard-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-shine::after {
+  content: "";
+  position: absolute;
+  inset: -40% auto -40% 0;
+  width: 34%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.55),
+    transparent
+  );
+  transform: translateX(-130%) skewX(-18deg);
+  pointer-events: none;
+}
+
+.dashboard-shine:hover::after {
+  animation: dashboard-shine 900ms ease;
+}
+
+.dashboard-float-icon {
+  animation: dashboard-float 3.8s ease-in-out infinite;
+}
+
+.dashboard-value-swap {
+  animation: dashboard-value-swap 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-reveal,
+  .dashboard-float-icon,
+  .dashboard-value-swap,
+  .dashboard-shine:hover::after {
+    animation: none;
+  }
+
+  .dashboard-interactive-card,
+  .dashboard-interactive-card:hover {
+    transition: none;
+    transform: none;
+  }
+}

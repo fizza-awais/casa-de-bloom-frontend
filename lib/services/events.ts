@@ -14,8 +14,11 @@ export interface EventOption {
   value: string;
 }
 
-export async function fetchEvents(): Promise<EventSummary[]> {
-  const response = await fetch(`${API_URL}/api/events/`, {
+export async function fetchEvents(upcomingOnly = true): Promise<EventSummary[]> {
+  const url = new URL(`${API_URL}/api/events/`);
+  if (upcomingOnly) url.searchParams.set("upcoming", "true");
+
+  const response = await fetch(url.toString(), {
     cache: "no-store",
   });
 
