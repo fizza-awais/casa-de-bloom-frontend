@@ -158,11 +158,23 @@ export default function MultiStepRegistrationForm({
   const [apiError, setApiError] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<SelectedProfileImage[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
+  const formScrollRef = useRef<HTMLDivElement | null>(null);
+  const previousStepIndexRef = useRef(currentIndex);
   const selectedImagesRef = useRef<SelectedProfileImage[]>([]);
 
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
   }, [selectedImages]);
+
+  useEffect(() => {
+    if (previousStepIndexRef.current === currentIndex) return;
+
+    previousStepIndexRef.current = currentIndex;
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      formScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [currentIndex]);
 
   useEffect(() => {
     return () => {
@@ -819,7 +831,10 @@ export default function MultiStepRegistrationForm({
             ))}
           </div>
 
-          <div className="relative z-10 flex min-h-0 w-full flex-col overflow-y-auto p-5 sm:p-7 lg:w-[58%] lg:p-6 xl:p-8 custom-scrollbar">
+          <div
+            ref={formScrollRef}
+            className="relative z-10 flex min-h-0 w-full flex-col overflow-y-auto p-5 sm:p-7 lg:w-[58%] lg:p-6 xl:p-8 custom-scrollbar"
+          >
             <form
               onSubmit={handleNext}
               className="my-auto flex w-full flex-col gap-4"

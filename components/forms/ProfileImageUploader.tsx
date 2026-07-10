@@ -2,7 +2,10 @@
 
 import { ImagePlus, Trash2, Undo2, X } from "lucide-react";
 import {
+  canPreviewProfileImage,
+  getProfileImageExtension,
   PROFILE_IMAGE_ACCEPT,
+  PROFILE_IMAGE_FORMAT_LABEL,
   PROFILE_IMAGE_LIMIT,
   ProfileImage,
   SelectedProfileImage,
@@ -51,6 +54,9 @@ export default function ProfileImageUploader({
               </h3>
               <p className="text-xs font-medium text-ui-text-muted">
                 Upload at least 1 clear photo. You may add up to 6 total.
+              </p>
+              <p className="mt-0.5 text-[11px] font-medium text-ui-text-muted">
+                Supports {PROFILE_IMAGE_FORMAT_LABEL}.
               </p>
             </div>
           </div>
@@ -136,29 +142,46 @@ export default function ProfileImageUploader({
             );
           })}
 
-          {selectedImages.map((image) => (
-            <div
-              key={image.id}
-              className="group relative aspect-square overflow-hidden rounded-xl border border-brand-primary/20 bg-ui-bg-page shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
-            >
-              <img
-                src={image.previewUrl}
-                alt="New profile preview"
-                className="h-full w-full object-cover"
-              />
-              <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-primary px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white">
-                New
-              </span>
-              <button
-                type="button"
-                onClick={() => onRemoveSelected(image.id)}
-                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ui-text-main shadow-sm transition-colors hover:bg-danger-500 hover:text-white"
-                aria-label="Remove selected profile image"
+          {selectedImages.map((image) => {
+            const canPreview = canPreviewProfileImage(image.file);
+            const extension = getProfileImageExtension(image.file).toUpperCase();
+
+            return (
+              <div
+                key={image.id}
+                className="group relative aspect-square overflow-hidden rounded-xl border border-brand-primary/20 bg-ui-bg-page shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
               >
-                <X size={15} />
-              </button>
-            </div>
-          ))}
+                {canPreview ? (
+                  <img
+                    src={image.previewUrl}
+                    alt="New profile preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-brand-light/70 p-3 text-center">
+                    <ImagePlus size={22} className="text-brand-primary" />
+                    <span className="text-xs font-extrabold text-ui-text-main">
+                      {extension || "Image"}
+                    </span>
+                    <span className="max-w-full truncate text-[10px] font-semibold text-ui-text-muted">
+                      Preview after upload
+                    </span>
+                  </div>
+                )}
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-primary px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                  New
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemoveSelected(image.id)}
+                  className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ui-text-main shadow-sm transition-colors hover:bg-danger-500 hover:text-white"
+                  aria-label="Remove selected profile image"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </section>
