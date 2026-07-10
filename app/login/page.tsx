@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Mail, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { API_URL } from "@/lib/api";
 
@@ -41,7 +41,11 @@ export default function LoginPage() {
       router.replace("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again.",
+      );
       setIsRedirecting(false);
       setIsSubmitting(false);
     }
@@ -87,6 +91,13 @@ export default function LoginPage() {
         {error && (
           <div className="bg-red-50 text-red-600 border border-red-200 text-xs font-medium rounded-xl p-3 mb-4 text-center">
             {error}
+          </div>
+        )}
+
+        {isRedirecting && (
+          <div className="mb-4 flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+            <CheckCircle2 size={16} className="shrink-0 text-emerald-500" />
+            <span>You&apos;re in. Pulling up your dashboard...</span>
           </div>
         )}
 
@@ -151,7 +162,11 @@ export default function LoginPage() {
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
-                  <Loader2 size={16} className="animate-spin" />
+                  {isRedirecting ? (
+                    <CheckCircle2 size={16} />
+                  ) : (
+                    <Loader2 size={16} className="animate-spin" />
+                  )}
                   {isRedirecting ? "Opening dashboard..." : "Logging in..."}
                 </span>
               ) : (
