@@ -270,8 +270,8 @@ export function getInvitationMarkup(data: InvitationData): string {
             <span class="guest-badge"><span class="dot"></span>Invitation</span>
           </div>
 
-          <h1 class="title-main">You're Registered!</h1>
-          <p class="sub-greeting">Welcome to Casa de Bloom, <span>${name}</span>.</p>
+          <h1 class="title-main">Your Casa de Bloom Invitation</h1>
+          <p class="sub-greeting">This is your personal invitation, <span>${name}</span>. We are holding your place in a day designed for connection and community.</p>
 
           <div class="info-box">
             <div class="info-row">

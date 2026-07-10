@@ -1,4 +1,36 @@
 import { API_URL, INTERNAL_API_URL } from "../api";
+import { appendProfileFields, ProfileImage } from "../profileImages";
+
+export interface MemberEventDetail {
+  id?: string;
+  name?: string;
+  event_type?: string;
+  event_date?: string;
+  capacity?: number | null;
+  created_at?: string;
+  location?: string;
+  address?: string;
+  start_time?: string;
+  end_time?: string;
+}
+
+export interface MemberEventRecord {
+  id?: string;
+  invitation_number?: string;
+  how_heard?: string;
+  why_attend?: string;
+  attending_as?: string;
+  emergency_contact?: string;
+  food_allergies?: string;
+  bringing_to_grill?: string;
+  willing_to_share_social?: boolean;
+  status?: string;
+  skills_offered?: string;
+  availability?: string;
+  can_capture_media?: boolean;
+  created_at?: string;
+  event_detail?: MemberEventDetail;
+}
 
 export interface MemberProfile {
   id: string;
@@ -18,10 +50,11 @@ export interface MemberProfile {
   exact_age: number | null;
   gender: string;
   participant_type: "guest" | "volunteer";
-  consents: any[];
-  registrations: any[];
-  volunteer_details: any[];
-  donations: any[];
+  consents: unknown[];
+  registrations: MemberEventRecord[];
+  volunteer_details: MemberEventRecord[];
+  donations: unknown[];
+  images?: ProfileImage[];
 }
 
 /**
@@ -116,10 +149,16 @@ export async function fetchMemberMe(cookieHeader?: string): Promise<MemberProfil
 /**
  * Patch member profile data (Complete Profile card).
  */
-export async function patchMemberProfile(data: Record<string, any>, cookieHeader?: string): Promise<MemberProfile> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+export async function patchMemberProfile(
+  data: Record<string, unknown> | FormData,
+  cookieHeader?: string,
+): Promise<MemberProfile> {
+  const isFormData = data instanceof FormData;
+  const headers: Record<string, string> = isFormData
+    ? {}
+    : {
+        "Content-Type": "application/json",
+      };
   if (cookieHeader) {
     headers["Cookie"] = cookieHeader;
   }
@@ -128,7 +167,8 @@ export async function patchMemberProfile(data: Record<string, any>, cookieHeader
   const res = await fetch(url, {
     method: "PATCH",
     headers,
-    body: JSON.stringify(data),
+    credentials: "include",
+    body: isFormData ? data : JSON.stringify(data),
   });
 
   if (!res.ok) {
@@ -137,12 +177,36 @@ export async function patchMemberProfile(data: Record<string, any>, cookieHeader
       const errData = await res.json();
       if (errData && errData.error) {
         errMsg = errData.error;
+      } else if (errData && typeof errData === "object") {
+        const messages = Object.values(errData).map((val) => {
+          if (Array.isArray(val)) return val.join(" ");
+          return String(val);
+        });
+        if (messages.length > 0) {
+          errMsg = messages.join(" ");
+        }
       }
     } catch {}
     throw new Error(errMsg);
   }
 
   return res.json();
+}
+
+export function buildMemberProfileFormData({
+  data,
+  images,
+  removeImageIds,
+}: {
+  data: Record<string, unknown>;
+  images?: File[];
+  removeImageIds?: string[];
+}): FormData {
+  const formData = new FormData();
+  appendProfileFields(formData, data);
+  images?.forEach((image) => formData.append("images", image));
+  removeImageIds?.forEach((id) => formData.append("remove_image_ids", id));
+  return formData;
 }
 
 /**

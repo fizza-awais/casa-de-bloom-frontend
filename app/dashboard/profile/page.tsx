@@ -1,18 +1,67 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { UserCheck, Share2, Loader2, User, Phone, MapPin, Briefcase, Building, ShieldAlert, FileText } from "lucide-react";
-import { useDashboardProfile } from "@/lib/context/DashboardContext";
+import { useEffect, useRef, useState } from "react";
+import {
+  BadgeCheck,
+  Briefcase,
+  Building,
+  FileText,
+  Globe,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldAlert,
+  Share2,
+  Sparkles,
+  User,
+  UserCheck,
+} from "lucide-react";
+import {
+  useDashboardProfile,
+  useDashboardProfileActions,
+} from "@/lib/context/DashboardContext";
 import FormComponent, { FormField, FormComponentRef } from "@/components/forms/FormComponent";
-import { patchMemberProfile } from "@/lib/services/auth";
+import {
+  buildMemberProfileFormData,
+  patchMemberProfile,
+} from "@/lib/services/auth";
+import ProfileImageUploader from "@/components/forms/ProfileImageUploader";
+import {
+  SelectedProfileImage,
+  validateProfileImageFiles,
+} from "@/lib/profileImages";
 
 export default function ProfilePage() {
   const profile = useDashboardProfile();
+  const { setProfile } = useDashboardProfileActions();
   const latestReg = profile?.registrations?.[0] || {};
+  const fullName = `${profile?.first_name || ""} ${
+    profile?.last_name || ""
+  }`.trim();
+  const initials =
+    `${profile?.first_name?.[0] ?? ""}${profile?.last_name?.[0] ?? ""}`.toUpperCase() ||
+    "CB";
 
   const profileFormRef = useRef<FormComponentRef>(null);
   const socialsFormRef = useRef<FormComponentRef>(null);
   const [globalSaving, setGlobalSaving] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<SelectedProfileImage[]>([]);
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const selectedImagesRef = useRef<SelectedProfileImage[]>([]);
+
+  useEffect(() => {
+    selectedImagesRef.current = selectedImages;
+  }, [selectedImages]);
+
+  useEffect(() => {
+    return () => {
+      selectedImagesRef.current.forEach((image) => {
+        URL.revokeObjectURL(image.previewUrl);
+      });
+    };
+  }, []);
 
   // --- 1. PROFILE CONFIG ---
   const profileInitialData = {
@@ -170,6 +219,53 @@ export default function ProfilePage() {
     },
   ];
 
+  const handleSelectImages = (fileList: FileList | null) => {
+    const files = Array.from(fileList ?? []);
+    if (files.length === 0) return;
+
+    const existingActiveCount = (profile.images ?? []).filter(
+      (image) => !removedImageIds.includes(image.id),
+    ).length;
+    const validationError = validateProfileImageFiles({
+      files,
+      currentCount: existingActiveCount + selectedImages.length,
+    });
+
+    if (validationError) {
+      setImageError(validationError);
+      return;
+    }
+
+    setImageError(null);
+    setSelectedImages((prev) => [
+      ...prev,
+      ...files.map((file) => ({
+        id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${file.name}-${file.lastModified}-${Math.random()}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      })),
+    ]);
+  };
+
+  const handleRemoveSelectedImage = (id: string) => {
+    setSelectedImages((prev) => {
+      const image = prev.find((item) => item.id === id);
+      if (image) URL.revokeObjectURL(image.previewUrl);
+      return prev.filter((item) => item.id !== id);
+    });
+    setImageError(null);
+  };
+
+  const handleToggleExistingImageRemoval = (id: string) => {
+    setRemovedImageIds((prev) =>
+      prev.includes(id) ? prev.filter((imageId) => imageId !== id) : [...prev, id],
+    );
+    setImageError(null);
+  };
+
   const handleGlobalSave = async () => {
     if (!profileFormRef.current || !socialsFormRef.current) return;
 
@@ -188,15 +284,32 @@ export default function ProfilePage() {
       const profileData = profileFormRef.current.getData();
       const socialsData = socialsFormRef.current.getData();
 
-      await patchMemberProfile({
-        ...profileData,
-        ...socialsData,
+      const updatedProfile = await patchMemberProfile(
+        buildMemberProfileFormData({
+          data: {
+            ...profileData,
+            ...socialsData,
+          },
+          images: selectedImages.map((image) => image.file),
+          removeImageIds: removedImageIds,
+        }),
+      );
+
+      selectedImages.forEach((image) => {
+        URL.revokeObjectURL(image.previewUrl);
       });
+      setSelectedImages([]);
+      setRemovedImageIds([]);
+      setImageError(null);
+      setProfile(updatedProfile);
 
       profileFormRef.current.setExternalSuccess(true);
       socialsFormRef.current.setExternalSuccess(true);
-    } catch (err: any) {
-      const fallbackMsg = err?.message ?? "Failed to save profile structural updates.";
+    } catch (err: unknown) {
+      const fallbackMsg =
+        err instanceof Error
+          ? err.message
+          : "Failed to save profile structural updates.";
       profileFormRef.current.setExternalApiError(fallbackMsg);
       socialsFormRef.current.setExternalApiError(fallbackMsg);
     } finally {
@@ -205,53 +318,151 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-8 mx-auto">
-      <div className="flex flex-col gap-8">
-        {/* Personal Details Row Container */}
-        <div className="w-full bg-white/70 backdrop-blur-md border border-ui-border rounded-3xl p-6 md:p-8 shadow-sm">
+    <div className="mx-auto flex w-full flex-col gap-5 pb-6">
+      <section className="dashboard-reveal dashboard-shine overflow-hidden rounded-3xl border border-brand-primary/20 bg-gradient-to-br from-brand-light via-white to-brand-accent/10 p-5 shadow-sm md:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="dashboard-float-icon flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-extrabold text-brand-primary shadow-sm ring-1 ring-brand-primary/15">
+              {initials}
+            </div>
+            <div>
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-sunshine/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-dark">
+                <Sparkles size={14} />
+                Member profile
+              </div>
+              <h1 className="text-2xl font-extrabold leading-tight text-ui-text-main md:text-3xl">
+                {fullName || "Casa de Bloom Member"}
+              </h1>
+              <p className="mt-1 text-sm font-semibold leading-6 text-ui-text-muted">
+                Keep your details fresh so check-in, invitations, and community
+                connections feel effortless.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[28rem]">
+            <div className="dashboard-interactive-card rounded-2xl border border-brand-primary/15 bg-white/75 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
+                Member ID
+              </p>
+              <p className="mt-1 truncate text-sm font-extrabold text-ui-text-main">
+                {profile?.cb_id || "-"}
+              </p>
+            </div>
+            <div className="dashboard-interactive-card rounded-2xl border border-brand-accent/20 bg-white/75 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-brand-accent">
+                Email
+              </p>
+              <p className="mt-1 truncate text-sm font-extrabold text-ui-text-main">
+                {profile?.email || "-"}
+              </p>
+            </div>
+            <div className="dashboard-interactive-card rounded-2xl border border-brand-secondary/25 bg-white/75 p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-brand-secondary">
+                Type
+              </p>
+              <p className="mt-1 capitalize text-sm font-extrabold text-ui-text-main">
+                {profile?.participant_type || "guest"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <section className="dashboard-reveal dashboard-interactive-card rounded-3xl border border-ui-border bg-white/80 p-5 shadow-sm backdrop-blur-md md:p-7">
           <FormComponent
             ref={profileFormRef}
             title={
               <>
-                <UserCheck className="text-brand-primary" size={20} />
+                <span className="dashboard-float-icon flex h-9 w-9 items-center justify-center rounded-xl bg-brand-light text-brand-primary">
+                  <UserCheck size={18} />
+                </span>
                 Personal Details
               </>
             }
-            subtitle="Manage your primary informational attributes and settings."
+            subtitle="Manage the information used for invitations, check-in, and event communication."
             fields={profileFields}
             initialData={profileInitialData}
             submitLabel={null} 
             successMessage="Personal details updated successfully!"
             onSubmit={() => {}}
           />
-        </div>
+        </section>
 
-        {/* Social Links Row Container */}
-        <div className="w-full bg-white/70 backdrop-blur-md border border-ui-border rounded-3xl p-6 md:p-8 shadow-sm">
-          <FormComponent
-            ref={socialsFormRef}
-            title={
-              <>
-                <Share2 className="text-brand-primary" size={20} />
-                Social Links
-              </>
-            }
-            subtitle="Connect your online handles and websites."
-            fields={socialsFields}
-            initialData={socialsInitialData}
-            submitLabel={null}
-            successMessage="Social profiles updated successfully!"
-            onSubmit={() => {}}
-          />
+        <div className="flex flex-col gap-5">
+          <section
+            className="dashboard-reveal dashboard-interactive-card rounded-3xl border border-ui-border bg-white/80 p-5 shadow-sm backdrop-blur-md md:p-7"
+            style={{ "--dashboard-delay": "120ms" } as React.CSSProperties}
+          >
+            <FormComponent
+              ref={socialsFormRef}
+              title={
+                <>
+                  <span className="dashboard-float-icon flex h-9 w-9 items-center justify-center rounded-xl bg-brand-accent/10 text-brand-accent">
+                    <Share2 size={18} />
+                  </span>
+                  Social Links
+                </>
+              }
+              subtitle="Connect online handles and websites so the community can find you."
+              fields={socialsFields}
+              initialData={socialsInitialData}
+              submitLabel={null}
+              successMessage="Social profiles updated successfully!"
+              onSubmit={() => {}}
+            />
+          </section>
+
+          <section
+            className="dashboard-reveal dashboard-shine rounded-3xl border border-brand-secondary/30 bg-brand-secondary/5 p-5 shadow-sm md:p-6"
+            style={{ "--dashboard-delay": "220ms" } as React.CSSProperties}
+          >
+            <div className="flex items-start gap-3">
+              <div className="dashboard-float-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-secondary shadow-sm">
+                <BadgeCheck size={20} />
+              </div>
+              <div>
+                <h2 className="text-base font-extrabold text-ui-text-main">
+                  Profile polish
+                </h2>
+                <p className="mt-1 text-sm font-medium leading-6 text-ui-text-muted">
+                  Complete profiles help Casa de Bloom prepare better welcomes,
+                  invitations, name checks, and community introductions.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <ProfileHint icon={<Mail size={15} />} label="Email stays locked to protect your account." />
+              <ProfileHint icon={<Phone size={15} />} label="Phone helps with event-day coordination." />
+              <ProfileHint icon={<Globe size={15} />} label="Social links make collaboration easier." />
+            </div>
+          </section>
+
+          <div
+            className="dashboard-reveal"
+            style={{ "--dashboard-delay": "320ms" } as React.CSSProperties}
+          >
+            <ProfileImageUploader
+              existingImages={profile.images ?? []}
+              removedImageIds={removedImageIds}
+              selectedImages={selectedImages}
+              error={imageError}
+              disabled={globalSaving}
+              onSelectFiles={handleSelectImages}
+              onRemoveSelected={handleRemoveSelectedImage}
+              onToggleExistingRemoval={handleToggleExistingImageRemoval}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
+      <div className="sticky bottom-4 z-30 flex justify-end pt-2">
         <button
           type="button"
           disabled={globalSaving}
           onClick={handleGlobalSave}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-brand-primary text-white font-semibold shadow-lg hover:bg-brand-hover transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-[0.98]"
+          className="dashboard-shine flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-primary px-8 py-3.5 font-semibold text-white shadow-lg shadow-brand-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {globalSaving ? (
             <>
@@ -263,6 +474,21 @@ export default function ProfilePage() {
           )}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ProfileHint({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="dashboard-interactive-card flex items-center gap-2 rounded-2xl border border-ui-border bg-white/70 px-3 py-2 text-xs font-semibold text-ui-text-muted">
+      <span className="text-brand-primary">{icon}</span>
+      {label}
     </div>
   );
 }

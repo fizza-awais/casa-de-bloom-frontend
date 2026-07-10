@@ -1,11 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import ComplianceStep from "./ComplianceStep";
+import ProfileImageUploader from "./ProfileImageUploader";
+import { RegistrationRedirectLoader } from "@/components/ui/PageLoader";
+import {
+  SelectedProfileImage,
+  validateProfileImageFiles,
+} from "@/lib/profileImages";
 import {
   checkRegistrationEmail,
   registerMember,
@@ -66,7 +72,7 @@ interface MultiStepRegistrationFormProps {
 const COMPLIANCE_STEP = {
   key: "compliance" as const,
   label: "Legal Compliance",
-  img: "/assets/images/sea-spa-elements-close-up.jpeg",
+  img: "/assets/images/WhatsApp Image 2026-06-16 at 2.56.56 AM (3).jpeg",
 };
 
 const COMPLIANCE_ERROR_MESSAGES: Record<string, string> = {
@@ -134,7 +140,23 @@ export default function MultiStepRegistrationForm({
   } | null>(null);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<SelectedProfileImage[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const selectedImagesRef = useRef<SelectedProfileImage[]>([]);
+
+  useEffect(() => {
+    selectedImagesRef.current = selectedImages;
+  }, [selectedImages]);
+
+  useEffect(() => {
+    return () => {
+      selectedImagesRef.current.forEach((image) => {
+        URL.revokeObjectURL(image.previewUrl);
+      });
+    };
+  }, []);
 
   const getStringValue = (name: string): string => {
     const value = formData[name];
@@ -409,6 +431,42 @@ export default function MultiStepRegistrationForm({
     return base;
   };
 
+  const handleSelectImages = (fileList: FileList | null) => {
+    const files = Array.from(fileList ?? []);
+    if (files.length === 0) return;
+
+    const validationError = validateProfileImageFiles({
+      files,
+      currentCount: selectedImages.length,
+    });
+    if (validationError) {
+      setImageError(validationError);
+      return;
+    }
+
+    setImageError(null);
+    setSelectedImages((prev) => [
+      ...prev,
+      ...files.map((file) => ({
+        id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${file.name}-${file.lastModified}-${Math.random()}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      })),
+    ]);
+  };
+
+  const handleRemoveSelectedImage = (id: string) => {
+    setSelectedImages((prev) => {
+      const image = prev.find((item) => item.id === id);
+      if (image) URL.revokeObjectURL(image.previewUrl);
+      return prev.filter((item) => item.id !== id);
+    });
+    setImageError(null);
+  };
+
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
     setHasAttemptedContinue(true);
@@ -438,28 +496,24 @@ export default function MultiStepRegistrationForm({
     }
 
     setIsSubmitting(true);
+    let keepLoading = false;
     try {
       const payload = buildPayload();
-      const result = await registerMember(payload);
+      const result = await registerMember(payload, {
+        images: selectedImages.map((image) => image.file),
+      });
 
+      keepLoading = true;
+      setIsRedirecting(true);
       if (onRegistrationComplete) {
         onRegistrationComplete(result, formData);
         return;
       }
 
-      // Build confirmation URL with registration details
-      const query = new URLSearchParams({
-        invitationNumber: result.invitation_number,
-        cbId: result.cb_id,
-        name: `${getStringValue("firstName")} ${getStringValue(
-          "lastName"
-        )}`.trim(),
-        participantType: result.participant_type,
-        recordType: result.record_type,
-        recordId: result.record_id,
-      });
-      router.push(`/register/donation?${query.toString()}`);
+      router.push("/dashboard");
     } catch (err: unknown) {
+      keepLoading = false;
+      setIsRedirecting(false);
       setApiError(
         err instanceof Error
           ? err.message
@@ -469,7 +523,9 @@ export default function MultiStepRegistrationForm({
         .getElementById("api-error")
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally {
-      setIsSubmitting(false);
+      if (!keepLoading) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -680,7 +736,7 @@ export default function MultiStepRegistrationForm({
   const currentKey = allSteps[currentIndex].key;
   const isLastStep = currentIndex === allSteps.length - 1;
   const isCurrentStepValid = isStepValid(currentKey);
-  const isContinueDisabled = isSubmitting || isCheckingEmail;
+  const isContinueDisabled = isSubmitting || isCheckingEmail || isRedirecting;
   const showValidationPrompt =
     hasAttemptedContinue && !isCurrentStepValid && errorList.length === 0;
   const validationPrompt =
@@ -690,6 +746,7 @@ export default function MultiStepRegistrationForm({
 
   return (
     <main className="min-h-dvh overflow-x-hidden p-3 font-sans sm:p-4 lg:h-dvh lg:overflow-hidden lg:p-6">
+      {isRedirecting && <RegistrationRedirectLoader />}
       <div className="mx-auto flex w-full max-w-6xl lg:h-full lg:max-h-[calc(100dvh-3rem)]">
         <div className="relative flex w-full min-h-0 flex-col overflow-hidden rounded-[2rem] border-2 border-white/50 bg-ui-card/30 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-2xl lg:h-full lg:flex-row">
           <div className="relative h-44 w-full shrink-0 overflow-hidden bg-ui-text-main sm:h-52 lg:hidden">
@@ -715,7 +772,7 @@ export default function MultiStepRegistrationForm({
           <div className="relative z-10 flex min-h-0 w-full flex-col overflow-y-auto p-5 sm:p-7 lg:w-[58%] lg:p-6 xl:p-8 custom-scrollbar">
             <form
               onSubmit={handleNext}
-              className="my-auto flex min-h-0 w-full flex-col gap-4"
+              className="my-auto flex w-full flex-col gap-4"
             >
               <div className="space-y-3">
                 <h1 className="text-xl font-extrabold tracking-tight text-ui-text-main sm:text-2xl">
@@ -764,7 +821,7 @@ export default function MultiStepRegistrationForm({
                 </p>
               </div>
 
-              <div className="min-h-0 space-y-3">
+              <div className="space-y-3">
                 {currentKey === "compliance" ? (
                   <ComplianceStep
                     formData={formData}
@@ -796,6 +853,17 @@ export default function MultiStepRegistrationForm({
                           </div>
                         );
                       }
+                    )}
+                    {currentIndex === 0 && (
+                      <div className="sm:col-span-2">
+                        <ProfileImageUploader
+                          selectedImages={selectedImages}
+                          error={imageError}
+                          disabled={isSubmitting}
+                          onSelectFiles={handleSelectImages}
+                          onRemoveSelected={handleRemoveSelectedImage}
+                        />
+                      </div>
                     )}
                   </div>
                 )}
@@ -835,7 +903,7 @@ export default function MultiStepRegistrationForm({
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-4 pt-2">
+              <div className="relative z-10 flex items-center gap-4 pt-2">
                 {currentIndex > 0 && (
                   <Button
                     type="button"
@@ -864,10 +932,14 @@ export default function MultiStepRegistrationForm({
                       : undefined
                   }
                 >
-                  {isSubmitting || isCheckingEmail ? (
+                  {isSubmitting || isCheckingEmail || isRedirecting ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 size={16} className="animate-spin" />
-                      {isCheckingEmail ? "Checking email..." : "Submitting…"}
+                      {isRedirecting
+                        ? "Preparing dashboard..."
+                        : isCheckingEmail
+                        ? "Checking email..."
+                        : "Submitting..."}
                     </span>
                   ) : isLastStep ? (
                     "I'm Ready for Casa de Bloom."

@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { User, Mail, Phone, Clock, Wrench, Lock } from "lucide-react";
-import MultiStepRegistrationForm, { CustomStep } from "@/components/forms/MultiStepRegistrationForm";
+import MultiStepRegistrationForm, {
+  CustomStep,
+  RegistrationFormData,
+} from "@/components/forms/MultiStepRegistrationForm";
 import { fetchEvents, formatEventOption, EventOption } from "@/lib/services/events";
 import { fetchMemberMe } from "@/lib/services/auth";
 import { RegisterResponse } from "@/lib/services/register";
@@ -108,13 +111,13 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
     {
       key: "profile",
       label: "Identity Profile",
-      img: "/assets/images/beautiful-lilies-with-pink-background.jpeg",
+      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).jpeg",
       fields: profileFields,
     },
     {
       key: "logistics",
       label: "Deployment & Logistics",
-      img: "/assets/images/spa-elements-pink.jpeg",
+      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).jpeg",
       fields: [
         {
           name: "availabilityTime",
@@ -144,7 +147,10 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
 }
 
 interface VolunteerRegistrationProps {
-  onRegistrationComplete?: (result: RegisterResponse, formData: Record<string, any>) => void;
+  onRegistrationComplete?: (
+    result: RegisterResponse,
+    formData: RegistrationFormData
+  ) => void;
 }
 
 export default function VolunteerRegistration({ onRegistrationComplete }: VolunteerRegistrationProps = {}) {
@@ -152,7 +158,7 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [initialData, setInitialData] = useState<Record<string, any>>({
+  const [initialData, setInitialData] = useState<RegistrationFormData>({
     eventDate: "",
     firstName: "",
     lastName: "",
@@ -197,6 +203,9 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
         }
       } catch (err) {
         console.error("Data load failed:", err);
+        if (active) {
+          setEventsError("Unable to load volunteer registration details right now.");
+        }
       } finally {
         if (active) {
           setIsLoading(false);

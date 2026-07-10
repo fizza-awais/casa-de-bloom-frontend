@@ -2,7 +2,6 @@ import React from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { fetchMemberMe } from "@/lib/services/auth";
-import { Sidebar } from "@/components/Sidebar";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import { DashboardProvider } from "@/lib/context/DashboardContext";
 
@@ -22,11 +21,8 @@ export default async function DashboardLayout({
 
   return (
     <DashboardProvider profile={profile}>
-      <div className="min-h-dvh bg-ui-bg-page flex flex-col gap-6 p-4 md:p-6 lg:h-dvh lg:flex-row lg:p-4 xl:p-6">
-        {/* Sidebar uses its own internal DEFAULT_NAV — no icon props crossing the server/client boundary */}
-        <Sidebar role={profile.participant_type} />
-
-        <div className="flex min-h-0 flex-1 flex-col gap-4 w-full max-w-7xl mx-auto">
+      <div className="min-h-dvh bg-ui-bg-page p-4 md:p-6">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
           <DashboardNav
             firstName={profile.first_name}
             lastName={profile.last_name}

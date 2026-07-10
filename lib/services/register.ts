@@ -1,4 +1,5 @@
 import { API_URL } from "../api";
+import { appendProfileFields } from "../profileImages";
 
 export interface RegisterPayload {
   participant_type: "guest" | "volunteer";
@@ -36,6 +37,10 @@ export interface RegisterPayload {
   availability?: string;
   skills_offered?: string;
   can_capture_media?: boolean;
+}
+
+export interface RegisterMemberOptions {
+  images?: File[];
 }
 
 export interface RegisterResponse {
@@ -189,14 +194,28 @@ export async function checkRegistrationEmail(
   };
 }
 
-export async function registerMember(payload: RegisterPayload): Promise<RegisterResponse> {
+export async function registerMember(
+  payload: RegisterPayload,
+  options: RegisterMemberOptions = {},
+): Promise<RegisterResponse> {
+  const hasImages = !!options.images?.length;
+  const body = hasImages ? new FormData() : JSON.stringify(payload);
+  const headers: HeadersInit = hasImages
+    ? {}
+    : {
+        "Content-Type": "application/json",
+      };
+
+  if (body instanceof FormData) {
+    appendProfileFields(body, payload);
+    options.images?.forEach((image) => body.append("images", image));
+  }
+
   const response = await fetch(`${API_URL}/api/register/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     credentials: "include",
-    body: JSON.stringify(payload),
+    body,
   });
 
   if (!response.ok) {

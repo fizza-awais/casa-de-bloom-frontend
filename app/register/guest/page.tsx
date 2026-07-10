@@ -149,13 +149,13 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
     {
       key: "identity",
       label: "Identity & Demographics",
-      img: "/assets/images/beautiful-lilies-with-pink-background.jpeg",
+      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).jpeg",
       fields: step1Fields,
     },
     {
       key: "community",
       label: "Community Details",
-      img: "/assets/images/high-angle-gua-sha-sleep-mask-arrangement.jpeg",
+      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).jpeg",
       fields: [
         {
           name: "attendanceMode",

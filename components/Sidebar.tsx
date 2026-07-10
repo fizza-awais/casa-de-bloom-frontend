@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Heart,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import Button from "./ui/Button";
 import { logout } from "@/lib/services/auth";
@@ -18,22 +19,22 @@ import { logout } from "@/lib/services/auth";
 type NavItem = {
   href: string;
   label: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
 };
 
 const NAV_BY_ROLE: Record<string, NavItem[]> = {
   guest: [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/profile", label: "Profile", icon: UserCheck },
-    { href: "/dashboard/events", label: "My Events", icon: CalendarDays },
-    { href: "/dashboard/donations", label: "Donations", icon: Heart },
+    { href: "/dashboard#events", label: "My Events", icon: CalendarDays },
+    { href: "/dashboard#donations", label: "Donations", icon: Heart },
   ],
   volunteer: [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/profile", label: "Profile", icon: UserCheck },
-    { href: "/dashboard/events", label: "My Events", icon: CalendarDays },
+    { href: "/dashboard#events", label: "My Events", icon: CalendarDays },
     { href: "/dashboard/volunteers", label: "Volunteer Hub", icon: Users },
-    { href: "/dashboard/donations", label: "Donations", icon: Heart },
+    { href: "/dashboard#donations", label: "Donations", icon: Heart },
   ],
 };
 

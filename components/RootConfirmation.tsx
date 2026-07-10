@@ -105,11 +105,13 @@ export default function RootConfirmation({ details }: RootConfirmationProps) {
               </div>
               <div>
                 <h1 className="text-2xl font-extrabold text-ui-text-main tracking-tight">
-                  You&apos;re Registered!
+                  Your Casa de Bloom Invitation
                 </h1>
                 <p className="text-sm text-ui-text-muted mt-1">
-                  Welcome to Casa de Bloom,{" "}
+                  This is your personal invitation,{" "}
                   <span className="font-semibold text-brand-dark">{displayName}</span>.
+                  We&apos;re holding your place in a day designed for connection,
+                  generosity, and community.
                 </p>
               </div>
             </div>
@@ -206,7 +208,7 @@ export default function RootConfirmation({ details }: RootConfirmationProps) {
                 fullWidth
                 size="lg"
                 icon={<Home size={16} strokeWidth={2.5} />}
-                onClick={() => router.push("/dashboard/events")}
+                onClick={() => router.push("/dashboard#events")}
               >
                 Go to My Events
               </Button>

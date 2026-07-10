@@ -77,12 +77,15 @@ export async function downloadInvitationPdf(data: InvitationData) {
   pdf.setTextColor("#1F1B24");
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(28);
-  pdf.text("You're Registered!", pageWidth / 2, 206 - lift, { align: "center" });
+  pdf.text("Your Casa de Bloom Invitation", pageWidth / 2, 206 - lift, { align: "center" });
 
   pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(14);
+  pdf.setFontSize(11);
   pdf.setTextColor("#6B7280");
-  pdf.text(`Welcome to Casa de Bloom, ${data.name}.`, pageWidth / 2, 234 - lift, {
+  pdf.text(`This is your personal invitation, ${data.name}.`, pageWidth / 2, 232 - lift, {
+    align: "center",
+  });
+  pdf.text("We are holding your place in a day designed for connection and community.", pageWidth / 2, 248 - lift, {
     align: "center",
   });
 

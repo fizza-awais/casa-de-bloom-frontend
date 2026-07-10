@@ -33,7 +33,7 @@ export default function GuidelinesPage() {
               Effective Date: July 8, 2026
             </p>
             <p className="text-xs sm:text-sm text-ui-text-main leading-relaxed italic pt-2">
-              "Casa de Bloom is a community-centered Reality Show where transformation, creativity, generosity, and meaningful human connection come together through shared experiences."
+              &ldquo;Casa de Bloom is a community-centered Reality Show where transformation, creativity, generosity, and meaningful human connection come together through shared experiences.&rdquo;
             </p>
           </header>
 
@@ -57,7 +57,7 @@ export default function GuidelinesPage() {
             <section className="space-y-2">
               <h2 className="font-bold text-base text-brand-dark uppercase tracking-wider">2. Registration & Private Guest Invitation</h2>
               <p>
-                All guests must register in advance. After completing registration and confirming your donation, you will receive your Casa de Bloom Private Guest Invitation. Please bring your invitation confirmation to the event. No walk-ins, please. Registration helps us prepare refreshments, seating, gifts, Kiwi Spa experiences, staffing, and event flow.
+                All guests must register in advance. After completing registration, you will be taken to your Casa de Bloom dashboard where you can view your events, open your Private Guest Invitation, and download it when needed. Please bring your invitation confirmation to the event. No walk-ins, please. Registration helps us prepare refreshments, seating, gifts, Kiwi Spa experiences, staffing, and event flow.
               </p>
             </section>
 
@@ -214,7 +214,7 @@ export default function GuidelinesPage() {
                 Your registration donation helps support event setup, refreshments, staffing, guest gifts, Kiwi Spa experiences, Marketplace development, cleanup, and future community programs.
               </p>
               <p>
-                KIWI Love is our official nonprofit initiative supporting local dog rescue organizations and shelters. Guests who would like to help may make optional donations directly to KIWI Love through designated QR codes available during registration and at the event. These donations are separate from event registration donations. Participation is entirely optional, but deeply appreciated by the animals, shelters, and community organizations we support.
+                KIWI Love is our official nonprofit initiative supporting local dog rescue organizations and shelters. Guests who would like to help may make optional donations directly to KIWI Love through designated QR codes available on the dashboard and at the event. These donations are separate from event registration donations. Participation is entirely optional, but deeply appreciated by the animals, shelters, and community organizations we support.
               </p>
             </section>
 

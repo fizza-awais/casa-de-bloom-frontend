@@ -60,7 +60,7 @@ export function ConfirmationContent() {
       try {
         const result = await verifyToken();
         if (!active) return;
-        router.replace(result.valid ? "/dashboard/events" : "/login");
+        router.replace(result.valid ? "/dashboard#events" : "/login");
       } catch {
         if (active) router.replace("/login");
       }
@@ -157,11 +157,13 @@ export function ConfirmationContent() {
               </div>
               <div>
                 <h1 className="text-2xl font-extrabold text-ui-text-main tracking-tight">
-                  You&apos;re Registered!
+                  Your Casa de Bloom Invitation
                 </h1>
                 <p className="text-sm text-ui-text-muted mt-1">
-                  Welcome to Casa de Bloom,{" "}
+                  This is your personal invitation,{" "}
                   <span className="font-semibold text-brand-dark">{displayName}</span>.
+                  We&apos;re holding your place in a day designed for connection,
+                  generosity, and community.
                 </p>
               </div>
             </div>
@@ -282,12 +284,12 @@ export function ConfirmationContent() {
                 fullWidth
                 size="lg"
                 icon={<Home size={16} strokeWidth={2.5} />}
-                onClick={() => router.push("/dashboard/events")}
+                onClick={() => router.push("/dashboard#events")}
               >
                 Go to My Events
               </Button>
               <p className="text-center text-sm font-semibold text-brand-dark">
-                Come ready to make someone else's day a little brighter.
+                Come ready to make someone else&apos;s day a little brighter.
               </p>
             </div>
           </div>
