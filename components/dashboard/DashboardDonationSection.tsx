@@ -27,7 +27,7 @@ export default function DashboardDonationSection({
           <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-ui-text-muted">
             {isVolunteer
               ? "Your time and contribution are already deeply appreciated. If you'd also like to support Casa de Bloom, donations are welcome but never expected."
-              : "If you would like to support our community, registration gifts help cover event setup, refreshments, guest gifts, Kiwi Spa experiences, and future Casa de Bloom programs."}
+              : "Your presence is already appreciated. If you'd like to support future Casa de Bloom experiences, donations are welcome and completely optional. Your support helps cover event setup, cleanup, complimentary Kiwi Spa services, and create an amazing experience for all."}
           </p>
         </div>
         <span className="inline-flex w-fit items-center rounded-full bg-brand-light px-3 py-1 text-xs font-bold text-brand-primary">

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 
 interface DonationStepProps {
-  /** Called when user picks a method (for tracking which method_shown to send to API) */
+  /** Called when user picks a method for tracking which method_shown to send to API. */
   onMethodSelect?: (method: "venmo" | "zelle" | "paypal" | null) => void;
   selectedMethod?: "venmo" | "zelle" | "paypal" | null;
   showHeader?: boolean;
@@ -57,12 +57,13 @@ export default function DonationStep({
             Support Casa de Bloom
           </h4>
           <p className="text-sm text-ui-text-muted leading-relaxed">
-            Registration donations help us cover event setup, refreshments,
-            staffing, guest gifts, and Kiwi Spa experiences. Scan any code below
-            to give — entirely at your own discretion.
+            Donations are welcome. Your support helps us cover event setup,
+            cleanup, complimentary Kiwi Spa services, and create an amazing
+            experience for all. Scan any code below to give at your own
+            discretion.
           </p>
           <p className="text-[11px] font-semibold text-brand-dark uppercase tracking-wide">
-            ⚠ Registration donations are non-refundable.
+            Optional donations are non-refundable.
           </p>
         </div>
       )}
@@ -143,7 +144,6 @@ export default function DonationStep({
         </div>
       ) : (
         <>
-          {/* QR Grid */}
           <div className="grid grid-cols-3 gap-3">
             {QR_METHODS.map((method) => {
               const isSelected = selectedMethod === method.key;
@@ -163,7 +163,6 @@ export default function DonationStep({
                   ].join(" ")}
                   style={{ background: method.bg }}
                 >
-                  {/* QR Image */}
                   <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-sm">
                     <Image
                       src={method.src}
@@ -173,7 +172,6 @@ export default function DonationStep({
                       className="object-cover"
                     />
                   </div>
-                  {/* Label */}
                   <span
                     className="text-xs font-bold tracking-tight"
                     style={{ color: method.color }}
@@ -185,7 +183,7 @@ export default function DonationStep({
                   </span>
                   {isSelected && (
                     <span className="text-[10px] font-bold text-brand-primary bg-brand-light px-2 py-0.5 rounded-full">
-                      Selected ✓
+                      Selected
                     </span>
                   )}
                 </button>
@@ -195,7 +193,6 @@ export default function DonationStep({
         </>
       )}
 
-      {/* Enlarged QR lightbox */}
       {enlarged && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6"
@@ -207,7 +204,7 @@ export default function DonationStep({
           >
             <div className="relative w-56 h-56 rounded-2xl overflow-hidden shadow-lg">
               <Image
-                src={QR_METHODS.find((m) => m.key === enlarged)!.src}
+                src={QR_METHODS.find((method) => method.key === enlarged)!.src}
                 alt={`${enlarged} QR`}
                 fill
                 className="object-cover"
@@ -229,16 +226,14 @@ export default function DonationStep({
 
       {layout === "grid" && (
         <>
-          {/* Divider */}
           <hr className="border-ui-border" />
 
-          {/* Kiwi Love Section */}
           <div className="rounded-2xl border-2 border-dashed border-brand-secondary/40 bg-brand-secondary/5 p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🐾</span>
+              <span className="text-lg font-extrabold text-brand-secondary">KIWI</span>
               <div>
                 <p className="text-xs font-bold text-brand-secondary uppercase tracking-widest">
-                  Optional — Kiwi Love Nonprofit
+                  Optional - Kiwi Love Nonprofit
                 </p>
                 <p className="text-[11px] text-ui-text-muted">
                   Dog rescue & local shelter support
@@ -248,7 +243,7 @@ export default function DonationStep({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <p className="text-[12px] text-ui-text-main leading-relaxed sm:flex-1">
                 KIWI Love supports local dog rescue organizations and shelters. This
-                is a completely separate and optional donation — 100% goes directly
+                is a completely separate and optional donation, and 100% goes directly
                 to the animals.
               </p>
               <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">

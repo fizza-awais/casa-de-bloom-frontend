@@ -40,7 +40,9 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
   const router = useRouter();
   const supportSectionRef = useRef<HTMLDivElement>(null);
 
-  const [selectedMethod, setSelectedMethod] = useState<"venmo" | "zelle" | "paypal" | null>("venmo");
+  const [selectedMethod, setSelectedMethod] = useState<
+    "venmo" | "zelle" | "paypal" | null
+  >("venmo");
 
   const handleContinue = () => {
     if (onContinue) {
@@ -68,12 +70,10 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
     supportSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const currentMethodDetails = QR_METHODS.find((m) => m.key === selectedMethod);
+  const currentMethodDetails = QR_METHODS.find((method) => method.key === selectedMethod);
 
   return (
     <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-12">
-      
-      {/* Background System */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
           src="/assets/images/bg_image.webp"
@@ -91,28 +91,30 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
 
       <div className="relative z-10 w-full max-w-2xl">
         <div className="bg-white/88 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 shadow-[0_32px_64px_rgba(31,27,36,0.18)] border border-white/70 space-y-8">
-          
-          {/* Welcome Header */}
           <header className="text-center space-y-2">
             <h1 className="text-4xl font-extrabold text-brand-primary tracking-tight">
               You're In!
             </h1>
             <p className="text-base sm:text-lg text-ui-text-main font-medium max-w-xl mx-auto leading-relaxed">
-              Welcome to Casa de Bloom. We’re so excited to spend the day with you.
+              Welcome to Casa de Bloom. We're so excited to spend the day with you.
             </p>
           </header>
 
-          <section className="space-y-4 rounded-3xl border border-brand-primary/10 bg-brand-light/10 p-5 md:p-6 transition-all duration-300">
+          <section
+            ref={supportSectionRef}
+            className="space-y-4 rounded-3xl border border-brand-primary/10 bg-brand-light/10 p-5 md:p-6 transition-all duration-300"
+          >
             <div className="text-center space-y-1">
               <h2 className="text-lg font-bold text-brand-primary">
                 How donations help
               </h2>
               <p className="mx-auto max-w-md text-xs leading-relaxed text-ui-text-muted">
-                Registration support helps with event setup, cleanup, refreshments, guest gifts, Kiwi Spa experiences, and the little details that make the day feel special. Giving is always optional.
+                Donations are welcome. Your support helps us cover event setup,
+                cleanup, complimentary Kiwi Spa services, and create an amazing
+                experience for all. Giving is always optional.
               </p>
             </div>
 
-            {/* Payment Method Tabs */}
             <div className="rounded-2xl border border-ui-border bg-white/50 p-2">
               <div className="grid grid-cols-3 gap-2">
                 {QR_METHODS.map((method) => {
@@ -137,7 +139,6 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
               </div>
             </div>
 
-            {/* QR Code Container */}
             <div className="rounded-2xl border border-ui-border bg-white/70 p-4 flex flex-col items-center justify-center min-h-[260px]">
               {currentMethodDetails ? (
                 <div className="flex flex-col items-center gap-2.5 w-full">
@@ -161,20 +162,20 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
             </div>
           </section>
 
-          {/* Kiwi Love Section */}
           <section className="rounded-3xl border-2 border-dashed border-brand-secondary/30 bg-brand-secondary/5 p-5 md:p-6 flex flex-col sm:flex-row items-center gap-5 md:gap-6">
             <div className="flex-1 space-y-2 text-center sm:text-left">
               <div className="flex items-center justify-center sm:justify-start gap-2">
-                <span className="text-lg">🐾</span>
+                <span className="text-lg font-extrabold text-brand-secondary">KIWI</span>
                 <h3 className="text-xs font-bold text-brand-secondary uppercase tracking-widest">
                   Kiwi Love Optional Donation
                 </h3>
               </div>
               <p className="text-xs text-ui-text-main leading-relaxed">
-                KIWI Love supports local dog rescue organizations and shelters. This is a separate optional donation, and 100% goes directly to the animals.
+                KIWI Love supports local dog rescue organizations and shelters. This
+                is a separate optional donation, and 100% goes directly to the animals.
               </p>
             </div>
-            
+
             <div className="relative w-28 h-28 rounded-2xl overflow-hidden shadow-sm border-2 border-white bg-white flex-shrink-0">
               <Image
                 src="/assets/images/kiwi_love_qr.webp"
@@ -186,7 +187,6 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
             </div>
           </section>
 
-          {/* Action Buttons */}
           <div className="space-y-4 pt-2">
             <Button
               type="button"
@@ -199,7 +199,7 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
             >
               Continue to My Invitation
             </Button>
-            
+
             <div className="text-center">
               <Button
                 type="button"
@@ -213,13 +213,11 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
             </div>
           </div>
 
-          {/* Low-priority non-refundable notice */}
           <footer className="text-center">
             <p className="text-[10px] text-ui-text-muted/70 flex items-center gap-2 justify-center">
-              <Info size={14} />Registration donations are non-refundable.
+              <Info size={14} />Optional donations are non-refundable.
             </p>
           </footer>
-
         </div>
       </div>
     </main>

@@ -167,13 +167,13 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
       fields: [
         {
           name: "attendanceMode",
-          label: "How are you planning to attend?",
+          label: "How will you be attending?",
           type: "select",
           required: true,
           colSpan: 2,
           placeholder: "Choose how you are arriving",
           options: [
-            { label: "Coming Solo", value: "alone" },
+            { label: "Attending Alone", value: "alone" },
             { label: "With a Partner", value: "partner" },
             { label: "Bringing a Friend", value: "friend" },
           ],
@@ -195,24 +195,24 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
         },
         {
           name: "communityGrill",
-          label: "What dish or drink are you excited to bring for the Community Potluck?",
+          label: "What dish or drink are you planning to bring for the Community Potluck?",
           type: "textarea",
           colSpan: 2,
           helperText: "This helps us build one generous table together. You can update your plan later.",
         },
         {
           name: "giveTakeContribution",
-          label: "What beautiful item might you bring for the Give & Take Table?",
+          label: "What might you bring for the Give & Take Table?",
           type: "textarea",
           colSpan: 2,
           helperText: "Optional. Choose something someone else may love.",
         },
         {
           name: "serviceOffering",
-          label: "Any service, giveaway, collaboration, or creative contribution you'd love to offer?",
+          label: "Would you like to offer a service, giveaway, collaboration, or creative contribution?",
           type: "textarea",
           colSpan: 2,
-          helperText: "Optional. Demos, samples, games, wellness, beauty, art, hosting, or anything generous counts.",
+          helperText: "Share anything you may want to offer to the Casa de Bloom community, such as photography, video, wellness, beauty, coaching, products, giveaways, or creative support.",
         },
         {
           name: "spreadTheWord",

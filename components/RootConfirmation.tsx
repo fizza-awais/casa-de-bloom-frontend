@@ -64,8 +64,8 @@ export default function RootConfirmation({ details }: RootConfirmationProps) {
     ? `${record.member_detail.first_name} ${record.member_detail.last_name}`.trim()
     : details.name;
   const displayCbId = record?.member_detail?.cb_id ?? details.cbId;
-  const displayEmail = record?.member_detail?.email ?? details.email ?? "â€”";
-  const displayPhone = record?.member_detail?.phone ?? details.phone ?? "â€”";
+  const displayEmail = record?.member_detail?.email ?? details.email ?? "-";
+  const displayPhone = record?.member_detail?.phone ?? details.phone ?? "-";
 
   const handleDownloadInvitation = () => {
     downloadInvitationPdf({

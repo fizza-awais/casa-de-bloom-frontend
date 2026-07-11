@@ -98,8 +98,12 @@ const fieldGroupClass =
   "relative border-b border-ui-border py-0.5 flex items-center group mb-2.5 transition-colors focus-within:border-brand-primary";
 const inputClass =
   "peer w-full bg-transparent text-ui-text-main text-sm focus:outline-none pr-8 pt-4 pb-1 placeholder-transparent";
+const textareaClass =
+  "peer w-full bg-transparent text-ui-text-main text-sm focus:outline-none pr-8 pt-8 pb-2 placeholder-transparent min-h-20 resize-none";
 const labelClass =
   "absolute left-0 top-4 text-ui-text-muted text-sm transition-all duration-200 pointer-events-none origin-left peer-focus:top-0 peer-focus:text-xs peer-focus:text-brand-primary peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-brand-primary";
+const textareaLabelClass =
+  "absolute left-0 top-2 text-ui-text-muted text-sm transition-all duration-200 pointer-events-none origin-left peer-focus:top-0 peer-focus:text-xs peer-focus:text-brand-primary peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-brand-primary";
 const selectLabelClass =
   "absolute left-0 top-0 text-ui-text-muted text-xs pointer-events-none";
 const selectClass =
@@ -649,19 +653,19 @@ export default function MultiStepRegistrationForm({
         );
       case "textarea":
         return (
-          <div className={fieldGroupClass}>
+          <div className={`${fieldGroupClass} pt-2 pb-1`}>
             <textarea
               id={field.name}
               placeholder=" "
               value={getStringValue(field.name)}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              className={`${inputClass} min-h-11 resize-none`}
+              className={textareaClass}
               aria-invalid={!!errors[field.name]}
               aria-describedby={
                 errors[field.name] ? `${field.name}-error` : undefined
               }
             />
-            <label htmlFor={field.name} className={labelClass}>
+            <label htmlFor={field.name} className={textareaLabelClass}>
               {field.label} {field.required ? "*" : ""}
             </label>
             {fieldIcon}

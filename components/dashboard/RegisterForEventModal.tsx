@@ -191,7 +191,7 @@ export default function RegisterForEventModal() {
 
               <div>
                 <label htmlFor="dashboard-attendance-mode" className="text-xs font-bold uppercase tracking-wider text-ui-text-muted">
-                  Attending As
+                  How will you be attending?
                 </label>
                 <select
                   id="dashboard-attendance-mode"
