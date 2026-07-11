@@ -10,6 +10,14 @@ import { fetchEvents, formatEventOption, EventOption } from "@/lib/services/even
 import { fetchMemberMe } from "@/lib/services/auth";
 import { RegisterResponse } from "@/lib/services/register";
 import type { ProfileImage } from "@/lib/profileImages";
+import {
+  REGISTRATION_GENDER_ERROR,
+  REGISTRATION_GENDER_OPTIONS,
+  normalizeRegistrationGender,
+} from "@/lib/registrationGender";
+import { getVipInviteParams, resolveVipEventDate } from "@/lib/vipInvite";
+
+const VIP_LOCKED_FIELDS = ["eventDate", "firstName", "lastName", "email", "phone"];
 
 function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boolean): CustomStep[] {
   const profileFields: CustomStep["fields"] = [
@@ -118,13 +126,8 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
       required: true,
       colSpan: 2,
       placeholder: "Select Gender",
-      options: [
-        { label: "Female", value: "Female" },
-        { label: "Male", value: "Male" },
-        { label: "Non-Binary", value: "Non-Binary" },
-        { label: "Prefer not to say", value: "Prefer not to say" },
-      ],
-      requiredMessage: "Gender declaration is mandatory.",
+      options: REGISTRATION_GENDER_OPTIONS,
+      requiredMessage: REGISTRATION_GENDER_ERROR,
     }
   );
 
@@ -204,6 +207,12 @@ interface VolunteerRegistrationProps {
 }
 
 export default function VolunteerRegistration({ onRegistrationComplete }: VolunteerRegistrationProps = {}) {
+  const [vipInvite] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : getVipInviteParams(new URLSearchParams(window.location.search))
+  );
+  const isSpecialInvite = !!vipInvite;
   const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [isReturningUser, setIsReturningUser] = useState(false);
@@ -230,10 +239,26 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
     let active = true;
 
     const loadData = async () => {
+      let loadedEventOptions: EventOption[] = [];
+
       try {
         const events = await fetchEvents();
+        const options = events.map(formatEventOption);
+        loadedEventOptions = options;
+
         if (active) {
-          setEventOptions(events.map(formatEventOption));
+          setEventOptions(options);
+        }
+
+        if (active && vipInvite) {
+          setInitialData((current) => ({
+            ...current,
+            eventDate: resolveVipEventDate(vipInvite.event, options),
+            firstName: vipInvite.firstName,
+            lastName: vipInvite.lastName,
+            email: vipInvite.email,
+            phone: vipInvite.phone,
+          }));
         }
 
         // Check if returning user
@@ -242,16 +267,18 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
           setIsReturningUser(true);
           const latestVol = profile.volunteer_details?.[0] || {};
           setInitialData({
-            eventDate: "", // Always select new event
-            firstName: profile.first_name || "",
-            lastName: profile.last_name || "",
-            email: profile.email || "",
-            phone: profile.phone || "",
+            eventDate: vipInvite
+              ? resolveVipEventDate(vipInvite.event, loadedEventOptions)
+              : "", // Always select new event
+            firstName: vipInvite?.firstName || profile.first_name || "",
+            lastName: vipInvite?.lastName || profile.last_name || "",
+            email: vipInvite?.email || profile.email || "",
+            phone: vipInvite?.phone || profile.phone || "",
             password: "",
             confirmPassword: "",
             ageRange: profile.age_range || "",
             exactAge: profile.exact_age ? String(profile.exact_age) : "",
-            gender: profile.gender || "",
+            gender: normalizeRegistrationGender(profile.gender),
             instagram: profile.instagram || "",
             availabilityTime: latestVol.availability || "",
             skillsContribution: latestVol.skills_offered || "",
@@ -276,7 +303,7 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
     return () => {
       active = false;
     };
-  }, []);
+  }, [vipInvite]);
 
   const steps = useMemo(() => buildVolunteerSteps(eventOptions, isReturningUser), [eventOptions, isReturningUser]);
 
@@ -311,6 +338,8 @@ export default function VolunteerRegistration({ onRegistrationComplete }: Volunt
       initialFormData={initialData}
       initialProfileImages={initialProfileImages}
       onRegistrationComplete={onRegistrationComplete}
+      isSpecialInvite={isSpecialInvite}
+      lockedFields={isSpecialInvite ? VIP_LOCKED_FIELDS : []}
     />
   );
 }

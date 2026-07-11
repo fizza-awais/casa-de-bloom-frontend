@@ -3,6 +3,7 @@ import {
   appendProfileFields,
   PROFILE_IMAGE_REQUEST_TOO_LARGE_MESSAGE,
 } from "../profileImages";
+import { normalizeRegistrationGender } from "../registrationGender";
 
 export interface RegisterPayload {
   participant_type: "guest" | "volunteer";
@@ -28,6 +29,7 @@ export interface RegisterPayload {
   photo_video_release_accepted: boolean;
   positive_experience_agreed: boolean;
   age_confirmed_21_plus: boolean;
+  special_invite?: boolean;
 
   // Guest specific fields
   how_heard?: string;
@@ -80,6 +82,26 @@ export interface RegistrationCheckResult {
   emailExists: boolean;
 }
 
+export interface RegistrationGenderQuota {
+  gender: string;
+  quota: number | null;
+  registered: number;
+  remaining: number | null;
+  quota_reached: boolean;
+  can_register: boolean;
+  message?: string;
+}
+
+export interface RegistrationQuotaResponse {
+  event_id: string;
+  event_date: string;
+  registration_closed: boolean;
+  unavailable_genders: string[];
+  message?: string;
+  male: RegistrationGenderQuota;
+  female: RegistrationGenderQuota;
+}
+
 export class RegistrationCheckError extends Error {
   field?: "email" | "eventDate";
 
@@ -87,6 +109,16 @@ export class RegistrationCheckError extends Error {
     super(message);
     this.name = "RegistrationCheckError";
     this.field = field;
+  }
+}
+
+export class RegistrationApiError extends Error {
+  fieldErrors: Record<string, string>;
+
+  constructor(message: string, fieldErrors: Record<string, string> = {}) {
+    super(message);
+    this.name = "RegistrationApiError";
+    this.fieldErrors = fieldErrors;
   }
 }
 
@@ -118,6 +150,8 @@ export interface RegistrationEventDetail {
   event_type: string;
   event_date: string;
   capacity: number | null;
+  male_quota: number | null;
+  female_quota: number | null;
   created_at: string;
 }
 
@@ -203,12 +237,44 @@ export async function checkRegistrationEmail(
   };
 }
 
+export async function fetchRegistrationQuota(
+  params: { eventId?: string; event?: string; eventDate?: string },
+  options: { signal?: AbortSignal } = {},
+): Promise<RegistrationQuotaResponse> {
+  const url = new URL(`${API_URL}/api/registration/quota/`);
+
+  if (params.eventId) {
+    url.searchParams.set("event_id", params.eventId);
+  } else if (params.event) {
+    url.searchParams.set("event", params.event);
+  } else if (params.eventDate) {
+    url.searchParams.set("event_date", params.eventDate);
+  }
+
+  const response = await fetch(url.toString(), {
+    cache: "no-store",
+    credentials: "include",
+    signal: options.signal,
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to check event registration availability right now.");
+  }
+
+  return response.json();
+}
+
 export async function registerMember(
   payload: RegisterPayload,
   options: RegisterMemberOptions = {},
 ): Promise<RegisterResponse> {
+  const normalizedGender = normalizeRegistrationGender(payload.gender);
+  const requestPayload: RegisterPayload = {
+    ...payload,
+    gender: normalizedGender || payload.gender,
+  };
   const hasImages = !!options.images?.length;
-  const body = hasImages ? new FormData() : JSON.stringify(payload);
+  const body = hasImages ? new FormData() : JSON.stringify(requestPayload);
   const headers: HeadersInit = hasImages
     ? {}
     : {
@@ -216,7 +282,7 @@ export async function registerMember(
       };
 
   if (body instanceof FormData) {
-    appendProfileFields(body, payload);
+    appendProfileFields(body, requestPayload);
     options.images?.forEach((image) => body.append("images", image));
   }
 
@@ -232,23 +298,28 @@ export async function registerMember(
     if (response.status === 413) {
       throw new Error(PROFILE_IMAGE_REQUEST_TOO_LARGE_MESSAGE);
     }
+    let errorData: unknown = null;
     try {
-      const errorData = await response.json();
-      if (errorData && typeof errorData === "object") {
-        // If it is a dictionary of field errors, map them to a friendly message
-        const messages = Object.values(errorData).map((val) => {
-          if (Array.isArray(val)) {
-            return val.join(" ");
-          }
-          return String(val);
-        });
-        if (messages.length > 0) {
-          errorMessage = messages.join(" ");
-        }
-      }
+      errorData = await response.json();
     } catch {
-      errorMessage = response.statusText || errorMessage;
+      errorData = null;
     }
+
+    if (errorData && typeof errorData === "object") {
+      const fieldErrors: Record<string, string> = {};
+      Object.entries(errorData).forEach(([field, val]) => {
+        const message = Array.isArray(val) ? val.join(" ") : String(val);
+        fieldErrors[field] = message;
+      });
+
+      const messages = Object.values(fieldErrors);
+      if (messages.length > 0) {
+        errorMessage = messages.join(" ");
+      }
+      throw new RegistrationApiError(errorMessage, fieldErrors);
+    }
+
+    errorMessage = response.statusText || errorMessage;
     throw new Error(errorMessage);
   }
 
