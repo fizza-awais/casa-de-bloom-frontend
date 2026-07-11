@@ -21,7 +21,7 @@ export const Navbar = () => {
           <Link href="/" className="shrink-0 relative block" aria-label="Casa de Bloom Home">
             <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center transition-transform hover:opacity-95">
               <Image
-                src="/assets/images/Casa_de_Bloom_logo_2.png"
+                src="/assets/images/Casa_de_Bloom_logo_2.webp"
                 alt="Casa de Bloom Logo"
                 fill
                 className="object-contain p-4"

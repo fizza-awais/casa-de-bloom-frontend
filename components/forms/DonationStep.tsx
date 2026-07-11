@@ -16,7 +16,7 @@ const QR_METHODS = [
   {
     key: "venmo" as const,
     label: "Venmo",
-    src: "/assets/images/Venmo.jpeg",
+    src: "/assets/images/Venmo.webp",
     handle: "@CasaDeBloomSD",
     color: "#FF3F82",
     bg: "#FFE3EE",
@@ -24,7 +24,7 @@ const QR_METHODS = [
   {
     key: "zelle" as const,
     label: "Zelle",
-    src: "/assets/images/Zelle.jpg",
+    src: "/assets/images/Zelle.webp",
     handle: "casadebloomsd@gmail.com",
     color: "#33C9DC",
     bg: "#E9FBFA",
@@ -32,7 +32,7 @@ const QR_METHODS = [
   {
     key: "paypal" as const,
     label: "PayPal",
-    src: "/assets/images/PayPal.jpg",
+    src: "/assets/images/PayPal.webp",
     handle: "@CasaDeBloom",
     color: "#99CC00",
     bg: "#F5FBE8",
@@ -128,7 +128,7 @@ export default function DonationStep({
             <div className="flex items-center gap-4">
               <div className="dashboard-float-icon relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
                 <Image
-                  src="/assets/images/kiwi_love_qr.png"
+                  src="/assets/images/kiwi_love_qr.webp"
                   alt="KIWI Love donation QR Code"
                   fill
                   sizes="112px"
@@ -253,7 +253,7 @@ export default function DonationStep({
               </p>
               <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
                 <Image
-                  src="/assets/images/kiwi_love_qr.png"
+                  src="/assets/images/kiwi_love_qr.webp"
                   alt="KIWI Love donation QR Code"
                   fill
                   sizes="112px"

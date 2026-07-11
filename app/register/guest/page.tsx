@@ -156,14 +156,14 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
       key: "identity",
       label: "Your Invitation Details",
       subtitle: "Choose your gathering and tell us who we are welcoming.",
-      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).jpeg",
+      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).webp",
       fields: step1Fields,
     },
     {
       key: "community",
       label: "How You'll Join the Experience",
       subtitle: "Help us prepare the room, the potluck, and the Give & Take table.",
-      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).jpeg",
+      img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).webp",
       fields: [
         {
           name: "attendanceMode",

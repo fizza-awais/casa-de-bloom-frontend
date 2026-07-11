@@ -79,7 +79,7 @@ const COMPLIANCE_STEP = {
   key: "compliance" as const,
   label: "Final Confirmations",
   subtitle: "Confirm the essentials before we save your place.",
-  img: "/assets/images/WhatsApp Image 2026-06-16 at 2.56.56 AM (3).jpeg",
+  img: "/assets/images/WhatsApp Image 2026-06-16 at 2.56.56 AM (3).webp",
 };
 
 const COMPLIANCE_ERROR_MESSAGES: Record<string, string> = {
