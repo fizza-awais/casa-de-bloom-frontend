@@ -7,6 +7,12 @@ import { fetchEvents, formatEventOption, EventOption } from "@/lib/services/even
 import { fetchMemberMe } from "@/lib/services/auth";
 import { RegisterResponse } from "@/lib/services/register";
 import type { ProfileImage } from "@/lib/profileImages";
+import {
+  REGISTRATION_GENDER_ERROR,
+  REGISTRATION_GENDER_OPTIONS,
+  normalizeRegistrationGender,
+} from "@/lib/registrationGender";
+import { getVipInviteParams, resolveVipEventDate } from "@/lib/vipInvite";
 
 const INITIAL_FORM_DATA = {
   eventDate: "",
@@ -27,6 +33,8 @@ const INITIAL_FORM_DATA = {
   serviceOffering: "",
   spreadTheWord: false,
 };
+
+const VIP_LOCKED_FIELDS = ["eventDate", "firstName", "lastName", "email", "phone"];
 
 function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean): CustomStep[] {
   const step1Fields: CustomStep["fields"] = [
@@ -141,13 +149,8 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
       required: true,
       colSpan: 2,
       placeholder: "Select Gender",
-      options: [
-        { label: "Female", value: "Female" },
-        { label: "Male", value: "Male" },
-        { label: "Non-Binary", value: "Non-Binary" },
-        { label: "Prefer not to say", value: "Prefer not to say" },
-      ],
-      requiredMessage: "Please select the option that feels right for you.",
+      options: REGISTRATION_GENDER_OPTIONS,
+      requiredMessage: REGISTRATION_GENDER_ERROR,
     }
   );
 
@@ -232,6 +235,12 @@ interface GuestRegistrationProps {
 }
 
 export default function GuestRegistration({ onRegistrationComplete }: GuestRegistrationProps = {}) {
+  const [vipInvite] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : getVipInviteParams(new URLSearchParams(window.location.search))
+  );
+  const isSpecialInvite = !!vipInvite;
   const [eventOptions, setEventOptions] = useState<EventOption[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [isReturningUser, setIsReturningUser] = useState(false);
@@ -243,17 +252,36 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
     let active = true;
 
     const loadData = async () => {
+      let loadedEventOptions: EventOption[] = [];
+
       try {
         const events = await fetchEvents();
         if (!active) return;
 
-        if (events.length === 0) {
+        const options = events.map(formatEventOption);
+        loadedEventOptions = options;
+        const vipEventDate = vipInvite
+          ? resolveVipEventDate(vipInvite.event, options)
+          : "";
+
+        if (events.length === 0 && !vipInvite) {
           setEventsError("No upcoming Casa de Bloom events are open for registration right now.");
           setIsLoading(false);
           return;
         }
 
-        setEventOptions(events.map(formatEventOption));
+        setEventOptions(options);
+
+        if (vipInvite) {
+          setInitialData((current) => ({
+            ...current,
+            eventDate: vipEventDate,
+            firstName: vipInvite.firstName,
+            lastName: vipInvite.lastName,
+            email: vipInvite.email,
+            phone: vipInvite.phone,
+          }));
+        }
       } catch (err) {
         console.error("Event load failed:", err);
         if (active) {
@@ -270,16 +298,18 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
           setIsReturningUser(true);
           const latestReg = profile.registrations?.[0] || {};
           setInitialData({
-            eventDate: "",
-            firstName: profile.first_name || "",
-            lastName: profile.last_name || "",
-            email: profile.email || "",
-            phone: profile.phone || "",
+            eventDate: vipInvite
+              ? resolveVipEventDate(vipInvite.event, loadedEventOptions)
+              : "",
+            firstName: vipInvite?.firstName || profile.first_name || "",
+            lastName: vipInvite?.lastName || profile.last_name || "",
+            email: vipInvite?.email || profile.email || "",
+            phone: vipInvite?.phone || profile.phone || "",
             password: "",
             confirmPassword: "",
             ageRange: profile.age_range || "",
             exactAge: profile.exact_age ? String(profile.exact_age) : "",
-            gender: profile.gender || "",
+            gender: normalizeRegistrationGender(profile.gender),
             attendanceMode: latestReg.attending_as || "",
             hearAboutUs: latestReg.how_heard || "",
             whyAttend: latestReg.why_attend || "",
@@ -304,7 +334,7 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
     return () => {
       active = false;
     };
-  }, []);
+  }, [vipInvite]);
 
   const steps = useMemo(() => buildGuestSteps(eventOptions, isReturningUser), [eventOptions, isReturningUser]);
 
@@ -340,6 +370,8 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
       initialProfileImages={initialProfileImages}
       onRegistrationComplete={onRegistrationComplete}
       finalSubmitLabel="Create My Invitation"
+      isSpecialInvite={isSpecialInvite}
+      lockedFields={isSpecialInvite ? VIP_LOCKED_FIELDS : []}
     />
   );
 }

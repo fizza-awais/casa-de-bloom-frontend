@@ -6,12 +6,15 @@ export interface EventSummary {
   event_type: string;
   event_date: string;
   capacity: number;
+  male_quota: number | null;
+  female_quota: number | null;
   created_at: string;
 }
 
 export interface EventOption {
   label: string;
   value: string;
+  eventId: string;
 }
 
 export async function fetchEvents(upcomingOnly = true): Promise<EventSummary[]> {
@@ -40,5 +43,6 @@ export function formatEventOption(event: EventSummary): EventOption {
   return {
     label: `${dateLabel} - ${event.name}`,
     value: event.event_date,
+    eventId: event.id,
   };
 }

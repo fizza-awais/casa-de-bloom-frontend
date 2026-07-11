@@ -15,12 +15,19 @@ import {
 } from "@/lib/profileImages";
 import {
   checkRegistrationEmail,
+  fetchRegistrationQuota,
   registerMember,
+  RegistrationApiError,
   RegistrationCheckError,
+  RegistrationQuotaResponse,
   RegisterPayload,
   RegisterResponse,
 } from "@/lib/services/register";
 import { REGISTRATION_CELEBRATION_KEY } from "@/lib/registrationCelebration";
+import {
+  REGISTRATION_GENDER_ERROR,
+  normalizeRegistrationGender,
+} from "@/lib/registrationGender";
 
 export interface FormField {
   name: string;
@@ -38,7 +45,7 @@ export interface FormField {
   required?: boolean;
   colSpan?: 1 | 2;
   placeholder?: string;
-  options?: { label: string; value: string }[];
+  options?: { label: string; value: string; eventId?: string }[];
   icon?: React.ReactNode;
   requiredMessage?: string;
   invalidMessage?: string;
@@ -73,6 +80,8 @@ interface MultiStepRegistrationFormProps {
   ) => void;
   initialProfileImages?: ProfileImage[];
   finalSubmitLabel?: string;
+  isSpecialInvite?: boolean;
+  lockedFields?: string[];
 }
 
 const COMPLIANCE_STEP = {
@@ -119,6 +128,41 @@ const MIN_EXACT_AGE = 21;
 const MAX_EXACT_AGE = 120;
 const EXACT_AGE_ERROR =
   "Exact age must be a whole number between 21 and 120.";
+const REGISTRATION_CLOSED_MESSAGE = "Registration is closed for this event.";
+const GENDER_QUOTA_UNAVAILABLE_MESSAGE =
+  "This gender cannot register because its quota is full.";
+
+function quotaGenderKey(gender: string): "male" | "female" | null {
+  const normalized = normalizeRegistrationGender(gender);
+
+  if (normalized === "Male") return "male";
+  if (normalized === "Female") return "female";
+
+  return null;
+}
+
+function genderCannotRegister(
+  quota: RegistrationQuotaResponse | null,
+  gender: string,
+): boolean {
+  const key = quotaGenderKey(gender);
+  if (!quota || !key) return false;
+
+  const unavailable = quota.unavailable_genders?.some(
+    (item) => item.toLowerCase() === key,
+  );
+
+  return unavailable || quota[key]?.can_register === false;
+}
+
+function allRegistrationGendersUnavailable(
+  quota: RegistrationQuotaResponse | null,
+): boolean {
+  return (
+    genderCannotRegister(quota, "Male") &&
+    genderCannotRegister(quota, "Female")
+  );
+}
 
 export default function MultiStepRegistrationForm({
   title,
@@ -129,6 +173,8 @@ export default function MultiStepRegistrationForm({
   onRegistrationComplete,
   initialProfileImages = [],
   finalSubmitLabel = "I'm Ready for Casa de Bloom.",
+  isSpecialInvite = false,
+  lockedFields = [],
 }: MultiStepRegistrationFormProps) {
   const router = useRouter();
   const [visiblePasswords, setVisiblePasswords] = useState<
@@ -160,11 +206,17 @@ export default function MultiStepRegistrationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [quota, setQuota] = useState<RegistrationQuotaResponse | null>(null);
+  const [quotaEventDate, setQuotaEventDate] = useState("");
+  const [isCheckingQuota, setIsCheckingQuota] = useState(false);
   const [selectedImages, setSelectedImages] = useState<SelectedProfileImage[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const previousStepIndexRef = useRef(currentIndex);
   const selectedImagesRef = useRef<SelectedProfileImage[]>([]);
+  const formDataRef = useRef(formData);
+
+  formDataRef.current = formData;
 
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
@@ -187,6 +239,75 @@ export default function MultiStepRegistrationForm({
       });
     };
   }, []);
+
+  useEffect(() => {
+    const selectedEventDate =
+      typeof formData.eventDate === "string" ? formData.eventDate.trim() : "";
+    const eventDateField = steps
+      .flatMap((step) => step.fields)
+      .find((field) => field.name === "eventDate");
+    const selectedEventId = eventDateField?.options?.find(
+      (option) => option.value === selectedEventDate,
+    )?.eventId;
+
+    if (!selectedEventDate) {
+      setQuota(null);
+      setQuotaEventDate("");
+      setIsCheckingQuota(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setQuota(null);
+    setQuotaEventDate(selectedEventDate);
+    setIsCheckingQuota(true);
+
+    fetchRegistrationQuota(
+      { eventId: selectedEventId, eventDate: selectedEventDate },
+      { signal: controller.signal },
+    )
+      .then((result) => {
+        setQuota(result);
+        const selectedGender =
+          typeof formDataRef.current.gender === "string"
+            ? formDataRef.current.gender
+            : "";
+
+        setErrors((prev) => {
+          const nextErrors = { ...prev };
+          delete nextErrors.eventDate;
+          delete nextErrors.gender;
+
+          if (isSpecialInvite) {
+            return nextErrors;
+          }
+
+          if (
+            result.registration_closed ||
+            allRegistrationGendersUnavailable(result)
+          ) {
+            nextErrors.eventDate = REGISTRATION_CLOSED_MESSAGE;
+          } else if (genderCannotRegister(result, selectedGender)) {
+            nextErrors.gender = GENDER_QUOTA_UNAVAILABLE_MESSAGE;
+          }
+
+          return nextErrors;
+        });
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setQuota(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsCheckingQuota(false);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [formData.eventDate, isSpecialInvite, steps]);
 
   const getStringValue = (name: string): string => {
     const value = formData[name];
@@ -219,6 +340,33 @@ export default function MultiStepRegistrationForm({
 
     if (field.required && !hasFieldValue(val)) {
       return field.requiredMessage || `${field.label} is required.`;
+    }
+
+    if (
+      field.name === "eventDate" &&
+      !isSpecialInvite &&
+      textValue &&
+      quotaEventDate === textValue &&
+      (quota?.registration_closed || allRegistrationGendersUnavailable(quota))
+    ) {
+      return REGISTRATION_CLOSED_MESSAGE;
+    }
+
+    if (field.name === "gender" && textValue) {
+      if (!normalizeRegistrationGender(textValue)) {
+        return REGISTRATION_GENDER_ERROR;
+      }
+
+      if (!isSpecialInvite && genderCannotRegister(quota, textValue)) {
+        return GENDER_QUOTA_UNAVAILABLE_MESSAGE;
+      }
+    } else if (
+      field.type === "select" &&
+      textValue &&
+      field.options?.length &&
+      !field.options.some((option) => option.value === textValue)
+    ) {
+      return field.invalidMessage || `Choose a valid ${field.label}.`;
     }
 
     if (
@@ -257,7 +405,11 @@ export default function MultiStepRegistrationForm({
     return null;
   };
 
+  const isFieldLocked = (name: string) => lockedFields.includes(name);
+
   const handleFieldChange = (name: string, value: RegistrationFormValue) => {
+    if (isFieldLocked(name)) return;
+
     if (name === "email" || name === "eventDate") {
       setCheckedEmail(null);
     }
@@ -310,6 +462,25 @@ export default function MultiStepRegistrationForm({
         if (name !== "password" && name !== "confirmPassword") {
           if (hasFieldValue(value)) {
             delete nextErrors[name];
+          }
+        }
+
+        if (name === "eventDate") {
+          delete nextErrors.gender;
+        }
+
+        if (name === "gender") {
+          const genderField = steps
+            .flatMap((step) => step.fields)
+            .find((field) => field.name === "gender");
+          const genderError = genderField
+            ? getFieldError(genderField, updated)
+            : null;
+
+          if (genderError) {
+            nextErrors.gender = genderError;
+          } else {
+            delete nextErrors.gender;
           }
         }
 
@@ -451,7 +622,7 @@ export default function MultiStepRegistrationForm({
       city: getOptionalStringValue("city"),
       age_range: getOptionalStringValue("ageRange"),
       exact_age: exactAge ? Number(exactAge) : undefined,
-      gender: getOptionalStringValue("gender"),
+      gender: normalizeRegistrationGender(getStringValue("gender")) || undefined,
       event_date: getStringValue("eventDate"),
       reality_show_understood: !!formData.reality_show_understood,
       community_guidelines_accepted: !!formData.guidelinesAccepted,
@@ -459,6 +630,7 @@ export default function MultiStepRegistrationForm({
       photo_video_release_accepted: !!formData.photoReleaseAccepted,
       positive_experience_agreed: !!formData.positive_experience_agreed,
       age_confirmed_21_plus: !!formData.ageConfirmed,
+      special_invite: isSpecialInvite ? true : undefined,
     };
 
     if (participantType === "guest") {
@@ -578,6 +750,23 @@ export default function MultiStepRegistrationForm({
     } catch (err: unknown) {
       keepLoading = false;
       setIsRedirecting(false);
+      if (err instanceof RegistrationApiError && err.fieldErrors.gender) {
+        const genderStepIndex = steps.findIndex((step) =>
+          step.fields.some((field) => field.name === "gender")
+        );
+        setErrors({ gender: err.fieldErrors.gender });
+        setApiError(null);
+        setHasAttemptedContinue(true);
+        if (genderStepIndex >= 0) {
+          setCurrentIndex(genderStepIndex);
+        }
+        window.setTimeout(() => {
+          document
+            .getElementById("gender-error")
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 0);
+        return;
+      }
       setApiError(
         err instanceof Error
           ? err.message
@@ -616,6 +805,14 @@ export default function MultiStepRegistrationForm({
   };
 
   const renderField = (field: FormField) => {
+    const isLocked = isFieldLocked(field.name);
+    const groupClass = `${fieldGroupClass} ${
+      isLocked
+        ? "rounded-xl border border-ui-border bg-slate-100/80 px-3 opacity-80"
+        : ""
+    }`;
+    const lockedControlClass =
+      "cursor-not-allowed text-ui-text-muted disabled:opacity-100";
     const fieldIcon = field.icon && (
       <span className="w-4 h-4 text-ui-text-muted absolute right-1 bottom-1.5 group-focus-within:text-brand-primary transition-colors flex items-center justify-center">
         {field.icon}
@@ -625,15 +822,16 @@ export default function MultiStepRegistrationForm({
     switch (field.type) {
       case "select":
         return (
-          <div className={fieldGroupClass}>
+          <div className={groupClass}>
             <label className={selectLabelClass}>
               {field.label} {field.required ? "*" : ""}
             </label>
             <select
               id={field.name}
-              className={selectClass}
+              className={`${selectClass} ${isLocked ? lockedControlClass : ""}`}
               value={getStringValue(field.name)}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              disabled={isLocked}
               aria-invalid={!!errors[field.name]}
               aria-describedby={
                 errors[field.name] ? `${field.name}-error` : undefined
@@ -653,13 +851,14 @@ export default function MultiStepRegistrationForm({
         );
       case "textarea":
         return (
-          <div className={`${fieldGroupClass} pt-2 pb-1`}>
+          <div className={`${groupClass} pt-2 pb-1`}>
             <textarea
               id={field.name}
               placeholder=" "
               value={getStringValue(field.name)}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              className={textareaClass}
+              className={`${textareaClass} ${isLocked ? lockedControlClass : ""}`}
+              readOnly={isLocked}
               aria-invalid={!!errors[field.name]}
               aria-describedby={
                 errors[field.name] ? `${field.name}-error` : undefined
@@ -717,14 +916,15 @@ export default function MultiStepRegistrationForm({
       case "password": {
         const isVisible = !!visiblePasswords[field.name];
         return (
-          <div className={fieldGroupClass}>
+          <div className={groupClass}>
             <input
               type={isVisible ? "text" : "password"}
               id={field.name}
               placeholder=" "
               value={getStringValue(field.name)}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              className={inputClass}
+              className={`${inputClass} ${isLocked ? lockedControlClass : ""}`}
+              readOnly={isLocked}
               aria-invalid={!!errors[field.name]}
               aria-describedby={
                 errors[field.name] ? `${field.name}-error` : undefined
@@ -752,14 +952,15 @@ export default function MultiStepRegistrationForm({
       }
       case "number":
         return (
-          <div className={fieldGroupClass}>
+          <div className={groupClass}>
             <input
               type="number"
               id={field.name}
               placeholder={field.placeholder || " "}
               value={getStringValue(field.name)}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              className={inputClass}
+              className={`${inputClass} ${isLocked ? lockedControlClass : ""}`}
+              readOnly={isLocked}
               min={field.name === "exactAge" ? MIN_EXACT_AGE : 21}
               max={field.name === "exactAge" ? MAX_EXACT_AGE : undefined}
               step={field.name === "exactAge" ? 1 : undefined}
@@ -776,14 +977,15 @@ export default function MultiStepRegistrationForm({
         );
       default:
         return (
-          <div className={fieldGroupClass}>
+          <div className={groupClass}>
             <input
               type={field.type}
               id={field.name}
               placeholder={field.placeholder || " "}
               value={getStringValue(field.name)}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              className={inputClass}
+              className={`${inputClass} ${isLocked ? lockedControlClass : ""}`}
+              readOnly={isLocked}
               aria-invalid={!!errors[field.name]}
               aria-describedby={
                 errors[field.name] ? `${field.name}-error` : undefined
@@ -803,7 +1005,26 @@ export default function MultiStepRegistrationForm({
   const currentStep = allSteps[currentIndex] as CustomStep;
   const isLastStep = currentIndex === allSteps.length - 1;
   const isCurrentStepValid = isStepValid(currentKey);
-  const isContinueDisabled = isSubmitting || isCheckingEmail || isRedirecting;
+  const selectedEventDate = getStringValue("eventDate").trim();
+  const quotaIsForSelectedEvent =
+    !!selectedEventDate && quotaEventDate === selectedEventDate;
+  const isRegistrationClosed =
+    !isSpecialInvite &&
+    quotaIsForSelectedEvent &&
+    (!!quota?.registration_closed || allRegistrationGendersUnavailable(quota));
+  const isSelectedGenderUnavailable =
+    !isSpecialInvite &&
+    quotaIsForSelectedEvent &&
+    genderCannotRegister(quota, getStringValue("gender"));
+  const isQuotaBlockingCurrentStep =
+    !isSpecialInvite &&
+    currentKey === steps[0]?.key &&
+    (isCheckingQuota || isRegistrationClosed || isSelectedGenderUnavailable);
+  const isContinueDisabled =
+    isSubmitting ||
+    isCheckingEmail ||
+    isRedirecting ||
+    isQuotaBlockingCurrentStep;
   const showValidationPrompt =
     hasAttemptedContinue && !isCurrentStepValid && errorList.length === 0;
   const validationPrompt =
@@ -945,6 +1166,17 @@ export default function MultiStepRegistrationForm({
                 )}
               </div>
 
+              {isRegistrationClosed && currentKey === steps[0]?.key && (
+                <div
+                  id="quota-error"
+                  role="alert"
+                  className="flex items-start gap-2 rounded-xl border border-danger-500/30 bg-danger-500/10 p-3 text-xs font-semibold text-danger-600"
+                >
+                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <p>{REGISTRATION_CLOSED_MESSAGE}</p>
+                </div>
+              )}
+
 
               {showValidationPrompt && (
                 <div
@@ -1015,6 +1247,8 @@ export default function MultiStepRegistrationForm({
                         ? "Preparing invitation..."
                         : isCheckingEmail
                         ? "Checking email..."
+                        : isCheckingQuota
+                        ? "Checking availability..."
                         : "Submitting..."}
                     </span>
                   ) : isLastStep ? (
