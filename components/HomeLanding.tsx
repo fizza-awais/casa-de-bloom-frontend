@@ -14,7 +14,7 @@ export default function HomeLanding({ onGuest, onVolunteer }: HomeLandingProps =
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center font-sans selection:bg-brand-primary/20 overflow-x-hidden px-4 py-8 md:py-12">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src="/assets/images/bg_image.png"
+          src="/assets/images/bg_image.webp"
           alt="Casa de Bloom Event Vibe backdrop"
           fill
           priority

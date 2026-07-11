@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     siteName: "Casa de Bloom",
     images: [
       {
-        url: "/assets/images/Casa_de_Bloom_logo_2.png",
+        url: "/assets/images/Casa_de_Bloom_logo_2.webp",
         width: 1200,
         height: 630,
         alt: "Casa de Bloom — Where connections become opportunities",

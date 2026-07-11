@@ -1,5 +1,9 @@
 import { API_URL, INTERNAL_API_URL } from "../api";
-import { appendProfileFields, ProfileImage } from "../profileImages";
+import {
+  appendProfileFields,
+  ProfileImage,
+  PROFILE_IMAGE_REQUEST_TOO_LARGE_MESSAGE,
+} from "../profileImages";
 
 export interface MemberEventDetail {
   id?: string;
@@ -178,6 +182,9 @@ export async function patchMemberProfile(
 
   if (!res.ok) {
     let errMsg = "Failed to update profile.";
+    if (res.status === 413) {
+      throw new Error(PROFILE_IMAGE_REQUEST_TOO_LARGE_MESSAGE);
+    }
     try {
       const errData = await res.json();
       if (errData && errData.error) {

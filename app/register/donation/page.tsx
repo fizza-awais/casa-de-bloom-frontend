@@ -11,21 +11,21 @@ const QR_METHODS = [
   {
     key: "venmo" as const,
     label: "Venmo",
-    src: "/assets/images/Venmo.jpeg",
+    src: "/assets/images/Venmo.webp",
     color: "#6D1ED4",
     bg: "#F3EEFF",
   },
   {
     key: "zelle" as const,
     label: "Zelle",
-    src: "/assets/images/Zelle.jpg",
+    src: "/assets/images/Zelle.webp",
     color: "#6D1ED4",
     bg: "#F3EEFF",
   },
   {
     key: "paypal" as const,
     label: "PayPal",
-    src: "/assets/images/PayPal.jpg",
+    src: "/assets/images/PayPal.webp",
     color: "#6D1ED4",
     bg: "#F3EEFF",
   },
@@ -76,7 +76,7 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
     <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-12">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src="/assets/images/bg_image.png"
+          src="/assets/images/bg_image.webp"
           alt="Casa de Bloom Event Vibe backdrop"
           fill
           priority
@@ -178,7 +178,7 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
 
             <div className="relative w-28 h-28 rounded-2xl overflow-hidden shadow-sm border-2 border-white bg-white flex-shrink-0">
               <Image
-                src="/assets/images/kiwi_love_qr.png"
+                src="/assets/images/kiwi_love_qr.webp"
                 alt="Kiwi Love Dog Rescue QR Code"
                 fill
                 sizes="112px"
