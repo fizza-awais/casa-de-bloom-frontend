@@ -1,18 +1,10 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import CasaVillaBackdrop from "@/components/ui/CasaVillaBackdrop";
 import {
   CasaBrandLockup,
   CasaMonogram,
 } from "@/components/branding/CasaBranding";
 
-export default async function GuidelinesPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ embedded?: string }>;
-}) {
-  const isEmbedded = (await searchParams)?.embedded === "1";
-
+export default function CommunityGuidelinesContent() {
   return (
     <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-16">
       
@@ -273,18 +265,6 @@ export default async function GuidelinesPage({
             </section>
 
           </div>
-
-          {!isEmbedded && (
-            <div className="pt-4 text-center">
-              <Link
-                href="/register"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-brand-hover"
-              >
-                <ArrowLeft size={17} />
-                Go back to registration
-              </Link>
-            </div>
-          )}
 
         </div>
       </div>

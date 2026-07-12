@@ -15,6 +15,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import ComplianceStep from "./ComplianceStep";
+import CommunityGuidelinesContent from "./CommunityGuidelinesContent";
 import ProfileImageUploader from "./ProfileImageUploader";
 import { RegistrationRedirectLoader } from "@/components/ui/PageLoader";
 import { CasaMonogram } from "@/components/branding/CasaBranding";
@@ -1300,7 +1301,9 @@ export default function MultiStepRegistrationForm({
               Go back to registration
             </button>
           </div>
-          <iframe src="/comminut-guidelines?embedded=1" title="Casa de Bloom Community Guidelines and Terms" className="min-h-0 flex-1 border-0" />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <CommunityGuidelinesContent />
+          </div>
         </div>
       )}
       <div className="mx-auto flex h-full w-full max-w-6xl">

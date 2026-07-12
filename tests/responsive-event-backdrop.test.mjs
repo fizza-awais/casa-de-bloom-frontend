@@ -12,7 +12,7 @@ const consumers = [
   "components/RootConfirmation.tsx",
 ];
 const villaConsumers = [
-  "app/register/guidelines/page.tsx",
+  "components/forms/CommunityGuidelinesContent.tsx",
   "app/dashboard/layout.tsx",
 ];
 

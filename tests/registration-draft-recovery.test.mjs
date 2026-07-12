@@ -44,7 +44,7 @@ test("community guidelines remain inside the mounted registration flow", () => {
   assert.doesNotMatch(compliance, /target="_blank"/);
   assert.match(compliance, /onOpenGuidelines/);
   assert.match(form, /isGuidelinesOpen/);
-  assert.match(form, /<iframe src="\/comminut-guidelines\?embedded=1"/);
+  assert.match(form, /CommunityGuidelinesContent/);
   assert.match(form, /Your registration is safely waiting behind this window/);
 });
 
