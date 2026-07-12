@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  CheckCircle,
   Calendar,
   Ticket,
   Mail,
@@ -28,6 +27,11 @@ import BloomCelebration, {
 } from "@/components/effects/BloomCelebration";
 import { REGISTRATION_CELEBRATION_KEY } from "@/lib/registrationCelebration";
 import ResponsiveEventBackdrop from "@/components/ui/ResponsiveEventBackdrop";
+import {
+  CasaBrandLockup,
+  CasaMonogram,
+  FloralFrame,
+} from "@/components/branding/CasaBranding";
 
 export function ConfirmationContent() {
   const params = useSearchParams();
@@ -198,14 +202,16 @@ export function ConfirmationContent() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/35 mix-blend-multiply" />
       </div>
 
-      <div className="relative z-10 w-full max-w-lg md:max-w-4xl bg-white/85 backdrop-blur-xl rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-[0_32px_64px_rgba(31,27,36,0.2)] border border-white/60">
-        <div className="flex flex-col md:flex-row items-stretch gap-8 md:gap-10">
+      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/88 p-6 shadow-[0_32px_64px_rgba(31,27,36,0.2)] backdrop-blur-xl sm:p-8 md:max-w-4xl md:p-10">
+        <FloralFrame
+          variant="garland"
+          className="absolute -left-12 -top-2 z-0 w-[30rem] opacity-[0.4] sm:-top-8 sm:w-[42rem] md:left-1/2 md:w-[52rem] md:-translate-x-1/2 md:opacity-[0.42]"
+        />
+        <div className="relative z-10 flex flex-col items-stretch gap-8 md:flex-row md:gap-10">
           {/* Left — confirmation + invitation number */}
           <div className="flex-1 space-y-6 flex flex-col justify-center">
             <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-brand-secondary/15 flex items-center justify-center shadow-inner">
-                <CheckCircle size={36} className="text-brand-secondary" strokeWidth={2} />
-              </div>
+              <CasaMonogram className="h-20 w-20 drop-shadow-sm md:h-24 md:w-24" />
               <div>
                 <h1 className="text-2xl font-extrabold text-ui-text-main tracking-tight">
                   {pageTitle}
@@ -359,6 +365,10 @@ export function ConfirmationContent() {
               <p className="text-center text-sm font-semibold text-brand-dark">
                 Come ready to make someone else&apos;s day a little brighter.
               </p>
+              <CasaBrandLockup
+                variant="vertical"
+                className="mx-auto h-auto w-28 opacity-80"
+              />
             </div>
           </div>
         </div>

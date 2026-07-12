@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { CasaMonogram } from "@/components/branding/CasaBranding";
 
 interface PageLoaderProps {
   title?: string;
@@ -22,8 +23,12 @@ export default function PageLoader({
     >
       <div className="dashboard-reveal relative w-full max-w-sm overflow-hidden rounded-3xl border border-brand-primary/15 bg-white/85 p-6 text-center shadow-xl shadow-brand-primary/10 backdrop-blur-md">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-secondary" />
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-light text-brand-primary shadow-sm">
-          <Loader2 size={28} className="animate-spin" />
+        <div className="relative mx-auto h-20 w-20">
+          <CasaMonogram variant="tile" decorative className="h-full w-full rounded-2xl shadow-sm" />
+          <Loader2
+            size={20}
+            className="absolute -bottom-1 -right-1 animate-spin rounded-full bg-white p-0.5 text-brand-primary shadow-sm"
+          />
         </div>
         <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-sunshine/35 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-brand-dark">
           <Sparkles size={13} />
@@ -56,8 +61,12 @@ export function RegistrationRedirectLoader() {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ui-bg-page/85 p-6 backdrop-blur-md">
       <div className="dashboard-reveal w-full max-w-md rounded-3xl border border-white/70 bg-white p-6 text-center shadow-2xl">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-status-active/10 text-status-active">
-          <CheckCircle2 size={28} />
+        <div className="relative mx-auto h-20 w-20">
+          <CasaMonogram decorative className="h-full w-full drop-shadow-sm" />
+          <CheckCircle2
+            size={22}
+            className="absolute bottom-0 right-0 rounded-full bg-white text-status-active shadow-sm"
+          />
         </div>
         <h2 className="mt-4 text-xl font-extrabold text-ui-text-main">
           Preparing your invitation

@@ -6,17 +6,18 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import {
   AlertCircle,
+  ArrowLeft,
   CheckCircle2,
   Eye,
   EyeOff,
   Loader2,
   LogIn,
   RotateCcw,
-  X,
 } from "lucide-react";
 import ComplianceStep from "./ComplianceStep";
 import ProfileImageUploader from "./ProfileImageUploader";
 import { RegistrationRedirectLoader } from "@/components/ui/PageLoader";
+import { CasaMonogram } from "@/components/branding/CasaBranding";
 import {
   ProfileImage,
   SelectedProfileImage,
@@ -1290,8 +1291,13 @@ export default function MultiStepRegistrationForm({
               <p className="text-sm font-extrabold text-ui-text-main">Community Guidelines & Terms</p>
               <p className="text-xs text-ui-text-muted">Your registration is safely waiting behind this window.</p>
             </div>
-            <button type="button" onClick={() => setIsGuidelinesOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full text-ui-text-muted transition hover:bg-brand-light hover:text-brand-primary" aria-label="Return to registration">
-              <X size={20} />
+            <button
+              type="button"
+              onClick={() => setIsGuidelinesOpen(false)}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-brand-primary/20 bg-brand-light/40 px-3 py-2 text-sm font-bold text-brand-primary transition hover:border-brand-primary/35 hover:bg-brand-light"
+            >
+              <ArrowLeft size={17} />
+              Go back to registration
             </button>
           </div>
           <iframe src="/comminut-guidelines?embedded=1" title="Casa de Bloom Community Guidelines and Terms" className="min-h-0 flex-1 border-0" />
@@ -1390,13 +1396,21 @@ export default function MultiStepRegistrationForm({
                 </div>
               </div>
 
-              <div className="text-left">
-                <h2 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-brand-dark to-brand-primary bg-clip-text text-transparent">
-                  {currentStep.label}
-                </h2>
-                <p className="text-xs text-ui-text-muted mt-1 font-medium">
-                  {currentStep.subtitle || "Please enter your details to continue."}
-                </p>
+              <div className="flex items-center gap-3 text-left">
+                {isLastStep && (
+                  <CasaMonogram
+                    decorative
+                    className="h-14 w-14 shrink-0 drop-shadow-sm"
+                  />
+                )}
+                <div>
+                  <h2 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-brand-dark to-brand-primary bg-clip-text text-transparent">
+                    {currentStep.label}
+                  </h2>
+                  <p className="text-xs text-ui-text-muted mt-1 font-medium">
+                    {currentStep.subtitle || "Please enter your details to continue."}
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">

@@ -23,6 +23,7 @@ import { fetchEvents } from "@/lib/services/events";
 import BloomCelebration, {
   type BloomCelebrationHandle,
 } from "@/components/effects/BloomCelebration";
+import { FloralFrame } from "@/components/branding/CasaBranding";
 
 interface EventDetail {
   id?: string;
@@ -195,10 +196,13 @@ export default function WelcomeEventBriefing({
         ref={celebrationRef}
         variant={isVolunteerExperience ? "volunteer" : "guest"}
       />
-
       <div className="relative z-10 flex flex-col gap-4">
-        <div className="dashboard-interactive-card dashboard-shine rounded-3xl border border-brand-primary/20 bg-gradient-to-br from-brand-light via-white to-brand-accent/10 p-4 text-ui-text-main shadow-sm md:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="dashboard-interactive-card dashboard-shine relative rounded-3xl border border-brand-primary/20 bg-gradient-to-br from-brand-light via-white to-brand-accent/10 p-4 text-ui-text-main shadow-sm md:p-5">
+          <FloralFrame
+            variant="garland"
+            className="absolute -right-10 -top-6 z-0 hidden w-[38rem] opacity-[0.38] lg:block"
+          />
+          <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <div className="dashboard-float-icon mb-3 inline-flex items-center gap-2 rounded-full bg-brand-sunshine/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-dark">
                 <Sparkles size={14} />

@@ -20,6 +20,7 @@ import {
   registerMember,
   RegistrationApiError,
 } from "@/lib/services/register";
+import { CasaMonogram, FloralFrame } from "@/components/branding/CasaBranding";
 
 const GUIDELINES_VERSION = "1.0";
 const ATTENDANCE_OPTIONS = [
@@ -225,18 +226,22 @@ export default function RegisterForEventModal() {
         typeof document !== "undefined" &&
         createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-ui-text-main/45 p-3 backdrop-blur-sm sm:p-4">
-            <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-white/70 bg-white shadow-2xl sm:max-h-[calc(100dvh-2rem)]">
-              <div className="flex shrink-0 items-start justify-between gap-4 border-b border-ui-border px-5 py-4 sm:px-6">
-                <div>
+            <div className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-white/70 bg-white shadow-2xl sm:max-h-[calc(100dvh-2rem)]">
+              <FloralFrame className="absolute -right-8 -top-12 z-0 hidden w-96 rotate-180 opacity-[0.46] sm:block" />
+              <div className="relative z-10 flex shrink-0 items-start justify-between gap-4 border-b border-ui-border bg-transparent px-5 py-4 sm:px-6">
+                <div className="flex items-center gap-3">
+                  <CasaMonogram decorative className="hidden h-12 w-12 shrink-0 sm:block" />
+                  <div>
                   <h2 className="text-xl font-extrabold text-ui-text-main">Register for a New Event</h2>
                   <p className="mt-1 text-sm text-ui-text-muted">Choose how you&apos;d like to join this gathering.</p>
+                  </div>
                 </div>
                 <button type="button" onClick={closeModal} className="rounded-full p-2 text-ui-text-muted transition-colors hover:bg-brand-light/40 hover:text-ui-text-main" aria-label="Close">
                   <X size={18} />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+              <form onSubmit={handleSubmit} className="relative z-10 flex min-h-0 flex-1 flex-col bg-white/96">
                 <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
                   <div>
                     <label htmlFor="dashboard-event-date" className="text-xs font-bold uppercase tracking-wider text-ui-text-muted">Event</label>

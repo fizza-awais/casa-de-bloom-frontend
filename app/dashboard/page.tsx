@@ -10,7 +10,7 @@ export default function DashboardPage() {
   const profile = useDashboardProfile();
 
   return (
-    <div className="flex w-full flex-col gap-4 pb-6">
+    <div className="flex w-full flex-col gap-4 pb-6 pt-3 md:pt-5">
       <section
         id="overview"
         className="dashboard-reveal scroll-mt-24"

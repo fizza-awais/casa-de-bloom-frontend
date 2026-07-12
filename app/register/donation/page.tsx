@@ -7,6 +7,7 @@ import { Suspense, useState, useRef } from "react";
 import Button from "@/components/ui/Button";
 import { Info } from "lucide-react";
 import { RegistrationFlowDetails } from "@/lib/registrationFlow";
+import { CasaMonogram } from "@/components/branding/CasaBranding";
 
 const QR_METHODS = [
   {
@@ -90,6 +91,7 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
       <div className="relative z-10 w-full max-w-2xl">
         <div className="bg-white/88 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 shadow-[0_32px_64px_rgba(31,27,36,0.18)] border border-white/70 space-y-8">
           <header className="text-center space-y-2">
+            <CasaMonogram className="mx-auto h-20 w-20 drop-shadow-sm" />
             <h1 className="text-4xl font-extrabold text-brand-primary tracking-tight">
               You're In!
             </h1>

@@ -31,6 +31,7 @@ import {
   SelectedProfileImage,
   validateProfileImageFiles,
 } from "@/lib/profileImages";
+import { CasaMonogram, FloralFrame } from "@/components/branding/CasaBranding";
 
 export default function ProfilePage() {
   const profile = useDashboardProfile();
@@ -397,12 +398,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto flex w-full flex-col gap-5 pb-6">
+    <div className="mx-auto flex w-full flex-col gap-5 pb-6 pt-3 md:pt-5">
       <section className="dashboard-reveal dashboard-shine overflow-hidden rounded-3xl border border-brand-primary/20 bg-gradient-to-br from-brand-light via-white to-brand-accent/10 p-5 shadow-sm md:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <FloralFrame className="absolute -bottom-10 -right-6 z-0 hidden w-[30rem] scale-x-[-1] opacity-[0.48] lg:block" />
+        <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="dashboard-float-icon flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-extrabold text-brand-primary shadow-sm ring-1 ring-brand-primary/15">
-              {initials}
+            <div className="dashboard-float-icon relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-brand-primary/15">
+              <CasaMonogram decorative className="h-full w-full" />
+              <span className="sr-only">{initials}</span>
             </div>
             <div>
               <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-brand-sunshine/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-dark">

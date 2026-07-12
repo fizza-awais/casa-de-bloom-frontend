@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/services/auth";
+import { CasaBrandLockup } from "@/components/branding/CasaBranding";
 
 interface DashboardNavProps {
   firstName: string;
@@ -98,10 +99,13 @@ export default function DashboardNav({
           <button
             type="button"
             onClick={() => goToDashboardSection("overview")}
-            className="text-left text-2xl font-extrabold tracking-tight sm:text-xl"
+            className="flex min-h-11 items-center text-left"
+            aria-label="Go to dashboard overview"
           >
-            <span className="text-brand-primary">Casa de</span>
-            <span className="text-brand-secondary"> Bloom</span>
+            <CasaBrandLockup
+              className="h-auto w-44 sm:w-48 lg:w-60"
+              priority
+            />
           </button>
 
           <div className="lg:hidden" ref={mobileMenuRef}>

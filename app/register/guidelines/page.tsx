@@ -1,28 +1,39 @@
-"use client";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import CasaVillaBackdrop from "@/components/ui/CasaVillaBackdrop";
+import {
+  CasaBrandLockup,
+  CasaMonogram,
+} from "@/components/branding/CasaBranding";
 
-import ResponsiveEventBackdrop from "@/components/ui/ResponsiveEventBackdrop";
+export default async function GuidelinesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ embedded?: string }>;
+}) {
+  const isEmbedded = (await searchParams)?.embedded === "1";
 
-export default function GuidelinesPage() {
   return (
     <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-16">
       
       {/* Background System */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <ResponsiveEventBackdrop
-          alt="Casa de Bloom Event Vibe backdrop"
-          className="brightness-[0.8]"
+        <CasaVillaBackdrop
+          alt="Casa de Bloom villa at sunset"
+          className="brightness-[0.82]"
+          priority
         />
-        <div className="absolute inset-0 bg-transparent">
-          <div className="absolute -top-1/4 -left-1/4 w-[80%] h-[80%] rounded-full bg-brand-light/40 blur-[130px]" />
-          <div className="absolute -bottom-1/4 -right-1/4 w-[75%] h-[75%] rounded-full bg-brand-accent/10 blur-[120px]" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/35 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
       <div className="relative z-10 w-full max-w-4xl">
         <div className="bg-white/92 backdrop-blur-xl rounded-[2.5rem] p-6 sm:p-12 shadow-[0_32px_64px_rgba(31,27,36,0.18)] border border-white/70 space-y-8 text-left">
           
-          <header className="border-b border-ui-border pb-6 space-y-2">
+          <header className="relative border-b border-ui-border pb-6 text-center">
+            <CasaMonogram
+              variant="tile"
+              className="mx-auto mb-3 h-20 w-20 rounded-2xl shadow-sm sm:h-24 sm:w-24"
+            />
             <h1 className="text-3xl sm:text-4xl font-extrabold text-brand-primary tracking-tight">
               Community Guidelines & Terms
             </h1>
@@ -32,6 +43,10 @@ export default function GuidelinesPage() {
             <p className="text-xs sm:text-sm text-ui-text-main leading-relaxed italic pt-2">
               &ldquo;Casa de Bloom is a community-centered Reality Show where transformation, creativity, generosity, and meaningful human connection come together through shared experiences.&rdquo;
             </p>
+            <CasaBrandLockup
+              variant="vertical"
+              className="mx-auto mt-4 h-auto w-28 opacity-75"
+            />
           </header>
 
           <div className="space-y-6 text-sm text-ui-text-main leading-relaxed max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
@@ -259,15 +274,17 @@ export default function GuidelinesPage() {
 
           </div>
 
-          <div className="pt-4 text-center">
-            <button
-              type="button"
-              onClick={() => window.close()}
-              className="px-6 py-2.5 bg-brand-primary hover:bg-brand-secondary text-white font-bold rounded-xl transition duration-200 cursor-pointer text-xs uppercase tracking-wider"
-            >
-              Close Window
-            </button>
-          </div>
+          {!isEmbedded && (
+            <div className="pt-4 text-center">
+              <Link
+                href="/register"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-brand-hover"
+              >
+                <ArrowLeft size={17} />
+                Go back to registration
+              </Link>
+            </div>
+          )}
 
         </div>
       </div>
