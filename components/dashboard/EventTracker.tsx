@@ -19,6 +19,8 @@ import {
 import Button from "@/components/ui/Button";
 import { downloadInvitationPdf } from "@/lib/downloadInvitationPdf";
 import { formatEventTimeRange } from "@/lib/date";
+import EventDirectionsLink from "@/components/ui/EventDirectionsLink";
+import { FloralFrame } from "@/components/branding/CasaBranding";
 
 interface EventDetail {
   id?: string;
@@ -28,6 +30,7 @@ interface EventDetail {
   start_time?: string | null;
   end_time?: string | null;
   location?: string;
+  google_maps_url?: string;
   capacity?: number | null;
   created_at?: string;
 }
@@ -258,8 +261,9 @@ export default function EventTracker({
 
   return (
     <>
-      <div className="dashboard-interactive-card rounded-3xl border border-ui-border bg-white/80 p-5 shadow-sm backdrop-blur-md md:p-6">
-        <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="dashboard-interactive-card relative overflow-hidden rounded-3xl border border-ui-border bg-white/80 p-5 shadow-sm backdrop-blur-md md:p-6">
+        <FloralFrame className="absolute -right-10 -top-16 z-0 hidden w-80 rotate-180 opacity-[0.38] md:block" />
+        <div className="relative z-10 mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-lg font-bold text-ui-text-main flex items-center gap-2">
               <CalendarDays className="text-brand-accent" size={20} />
@@ -275,7 +279,7 @@ export default function EventTracker({
         </div>
 
         {sorted.length === 0 ? (
-          <div className="text-center py-10 rounded-2xl border border-dashed border-ui-border bg-white/30">
+          <div className="relative z-10 text-center py-10 rounded-2xl border border-dashed border-ui-border bg-white/30">
             <CalendarDays
               size={32}
               className="text-ui-text-muted/40 mx-auto mb-3"
@@ -288,7 +292,7 @@ export default function EventTracker({
             </p>
           </div>
         ) : (
-          <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+          <div className="relative z-10 max-h-[28rem] space-y-3 overflow-y-auto pr-1 custom-scrollbar">
             {sorted.map((reg, i) => (
               <RegistrationCard
                 key={reg.id}
@@ -390,6 +394,16 @@ export default function EventTracker({
                           </span>{" "}
                           {selectedEventDate}
                         </p>
+                        <p className="mt-1 text-sm text-ui-text-muted">
+                          <span className="font-semibold text-ui-text-main">
+                            Location:
+                          </span>{" "}
+                          {selectedEvent?.location || "Details provided to registered guests"}
+                        </p>
+                        <EventDirectionsLink
+                          href={selectedEvent?.google_maps_url}
+                          className="mt-3 w-full"
+                        />
                       </div>
 
                       <hr className="border-ui-border/60" />

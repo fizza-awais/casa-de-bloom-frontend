@@ -452,25 +452,43 @@ export default function ProfilePage() {
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="dashboard-reveal dashboard-interactive-card rounded-3xl border border-ui-border bg-white/80 p-5 shadow-sm backdrop-blur-md md:p-7">
-          <FormComponent
-            ref={profileFormRef}
-            title={
-              <>
-                <span className="dashboard-float-icon flex h-9 w-9 items-center justify-center rounded-xl bg-brand-light text-brand-primary">
-                  <UserCheck size={18} />
-                </span>
-                Personal Details
-              </>
-            }
-            subtitle="Manage the information used for invitations, check-in, and event communication."
-            fields={profileFields}
-            initialData={profileInitialData}
-            submitLabel={null} 
-            successMessage="Personal details updated successfully!"
-            onSubmit={() => {}}
-          />
-        </section>
+        <div className="flex min-w-0 flex-col gap-5">
+          <section className="dashboard-reveal dashboard-interactive-card rounded-3xl border border-ui-border bg-white/80 p-5 shadow-sm backdrop-blur-md md:p-7">
+            <FormComponent
+              ref={profileFormRef}
+              title={
+                <>
+                  <span className="dashboard-float-icon flex h-9 w-9 items-center justify-center rounded-xl bg-brand-light text-brand-primary">
+                    <UserCheck size={18} />
+                  </span>
+                  Personal Details
+                </>
+              }
+              subtitle="Manage the information used for invitations, check-in, and event communication."
+              fields={profileFields}
+              initialData={profileInitialData}
+              submitLabel={null}
+              successMessage="Personal details updated successfully!"
+              onSubmit={() => {}}
+            />
+          </section>
+
+          <div
+            className="dashboard-reveal"
+            style={{ "--dashboard-delay": "120ms" } as React.CSSProperties}
+          >
+            <ProfileImageUploader
+              existingImages={profile.images ?? []}
+              removedImageIds={removedImageIds}
+              selectedImages={selectedImages}
+              error={imageError}
+              disabled={globalSaving}
+              onSelectFiles={handleSelectImages}
+              onRemoveSelected={handleRemoveSelectedImage}
+              onToggleExistingRemoval={handleToggleExistingImageRemoval}
+            />
+          </div>
+        </div>
 
         <div className="flex flex-col gap-5">
           <section
@@ -546,21 +564,6 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          <div
-            className="dashboard-reveal"
-            style={{ "--dashboard-delay": "320ms" } as React.CSSProperties}
-          >
-            <ProfileImageUploader
-              existingImages={profile.images ?? []}
-              removedImageIds={removedImageIds}
-              selectedImages={selectedImages}
-              error={imageError}
-              disabled={globalSaving}
-              onSelectFiles={handleSelectImages}
-              onRemoveSelected={handleRemoveSelectedImage}
-              onToggleExistingRemoval={handleToggleExistingImageRemoval}
-            />
-          </div>
         </div>
       </div>
 

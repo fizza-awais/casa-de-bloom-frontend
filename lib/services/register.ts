@@ -154,6 +154,7 @@ export interface RegistrationEventDetail {
   start_time: string | null;
   end_time: string | null;
   location: string;
+  google_maps_url: string;
   capacity: number | null;
   male_quota: number | null;
   female_quota: number | null;

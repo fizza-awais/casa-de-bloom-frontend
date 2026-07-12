@@ -14,6 +14,7 @@ export interface MemberEventDetail {
   created_at?: string;
   location?: string;
   address?: string;
+  google_maps_url?: string;
   start_time?: string;
   end_time?: string;
 }

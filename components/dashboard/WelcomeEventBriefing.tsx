@@ -24,6 +24,7 @@ import BloomCelebration, {
   type BloomCelebrationHandle,
 } from "@/components/effects/BloomCelebration";
 import { FloralFrame } from "@/components/branding/CasaBranding";
+import EventDirectionsLink from "@/components/ui/EventDirectionsLink";
 
 interface EventDetail {
   id?: string;
@@ -32,8 +33,9 @@ interface EventDetail {
   event_date?: string;
   location?: string;
   address?: string;
-  start_time?: string;
-  end_time?: string;
+  google_maps_url?: string;
+  start_time?: string | null;
+  end_time?: string | null;
   created_at?: string;
 }
 
@@ -293,6 +295,10 @@ export default function WelcomeEventBriefing({
               >
                 {location}
               </p>
+              <EventDirectionsLink
+                href={event?.google_maps_url}
+                className="mt-3 w-full"
+              />
             </div>
             </div>
           </div>

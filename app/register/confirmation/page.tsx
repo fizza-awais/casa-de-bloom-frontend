@@ -32,6 +32,7 @@ import {
   CasaMonogram,
   FloralFrame,
 } from "@/components/branding/CasaBranding";
+import EventDirectionsLink from "@/components/ui/EventDirectionsLink";
 
 export function ConfirmationContent() {
   const params = useSearchParams();
@@ -286,6 +287,14 @@ export function ConfirmationContent() {
                       <p className="text-sm text-ui-text-muted mt-0.5">
                         <span className="font-semibold text-ui-text-main">Date:</span> {formattedDate}
                       </p>
+                      <p className="mt-1 text-sm text-ui-text-muted">
+                        <span className="font-semibold text-ui-text-main">Location:</span>{" "}
+                        {event.location || "Details provided to registered guests"}
+                      </p>
+                      <EventDirectionsLink
+                        href={event.google_maps_url}
+                        className="mt-3 w-full"
+                      />
                     </div>
                     
                     <hr className="border-ui-border/60" />

@@ -5,6 +5,10 @@ export interface EventSummary {
   name: string;
   event_type: string;
   event_date: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  location?: string;
+  google_maps_url?: string;
   capacity: number;
   male_quota: number | null;
   female_quota: number | null;
