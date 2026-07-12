@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import {
   CheckCircle,
   Calendar,
@@ -22,12 +21,13 @@ import {
   VolunteerDetail,
 } from "@/lib/services/register";
 import { verifyToken } from "@/lib/services/auth";
-import { formatEventDate } from "@/lib/date";
+import { formatEventDate, formatEventTimeRange } from "@/lib/date";
 import { downloadInvitationPdf } from "@/lib/downloadInvitationPdf";
 import BloomCelebration, {
   type BloomCelebrationHandle,
 } from "@/components/effects/BloomCelebration";
 import { REGISTRATION_CELEBRATION_KEY } from "@/lib/registrationCelebration";
+import ResponsiveEventBackdrop from "@/components/ui/ResponsiveEventBackdrop";
 
 export function ConfirmationContent() {
   const params = useSearchParams();
@@ -124,6 +124,8 @@ export function ConfirmationContent() {
       cbId: displayCbId,
       eventName: eventLabel,
       eventDate: formattedDate,
+      eventTime: formatEventTimeRange(event?.start_time, event?.end_time),
+      eventLocation: event?.location,
       email: displayEmail,
       phone: displayPhone,
       role: isVolunteer ? "volunteer" : "guest",
@@ -185,12 +187,9 @@ export function ConfirmationContent() {
         coverage="viewport"
       />
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image
-          src="/assets/images/bg_image_sunset_2026.webp"
+        <ResponsiveEventBackdrop
           alt="Casa de Bloom Event Vibe backdrop"
-          fill
-          priority
-          className="object-cover object-center pointer-events-none brightness-[0.8] scale-105"
+          className="brightness-[0.8]"
         />
         <div className="absolute inset-0 bg-transparent">
           <div className="absolute -top-1/4 -left-1/4 w-[80%] h-[80%] rounded-full bg-brand-light/40 blur-[130px]" />

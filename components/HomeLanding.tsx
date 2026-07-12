@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ResponsiveEventBackdrop from "@/components/ui/ResponsiveEventBackdrop";
 import Link from "next/link";
 import { HeartHandshake, Sparkles } from "lucide-react";
 
@@ -13,12 +13,9 @@ export default function HomeLanding({ onGuest, onVolunteer }: HomeLandingProps =
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center font-sans selection:bg-brand-primary/20 overflow-x-hidden px-4 py-8 md:py-12">
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image
-          src="/assets/images/bg_image_sunset_2026.webp"
+        <ResponsiveEventBackdrop
           alt="Casa de Bloom Event Vibe backdrop"
-          fill
-          priority
-          className="object-cover object-center pointer-events-none brightness-[0.8] scale-105"
+          className="brightness-[0.8]"
         />
 
         <div className="absolute inset-0 bg-transparent">

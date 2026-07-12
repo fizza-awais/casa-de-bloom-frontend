@@ -18,12 +18,16 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { downloadInvitationPdf } from "@/lib/downloadInvitationPdf";
+import { formatEventTimeRange } from "@/lib/date";
 
 interface EventDetail {
   id?: string;
   name?: string;
   event_type?: string;
   event_date?: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  location?: string;
   capacity?: number | null;
   created_at?: string;
 }
@@ -242,6 +246,8 @@ export default function EventTracker({
       cbId: member.cbId,
       eventName: selectedEventName,
       eventDate: selectedEventDate,
+      eventTime: formatEventTimeRange(selectedEvent?.start_time, selectedEvent?.end_time),
+      eventLocation: selectedEvent?.location,
       email: member.email || "-",
       phone: member.phone || "-",
       role: selectedIsVolunteer ? "volunteer" : "guest",

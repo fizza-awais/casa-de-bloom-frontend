@@ -1,4 +1,10 @@
 import { InvitationData } from "@/lib/templates/invitationTemplate";
+import {
+  GUEST_INVITATION_TEMPLATE,
+  loadGuestInvitationArtwork,
+  loadGuestInvitationFonts,
+  renderGuestInvitationArtworkPdf,
+} from "@/lib/guestInvitationPdf";
 
 function sanitizeFilenamePart(value: string) {
   return value.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "");
@@ -26,7 +32,7 @@ function fitText(pdf: any, value: string, maxWidth: number, fontSize: number, mi
   }
 }
 
-export async function downloadInvitationPdf(data: InvitationData) {
+export async function downloadPlainInvitationPdf(data: InvitationData) {
   const { jsPDF } = await import("jspdf");
   const isVolunteer = data.role === "volunteer";
   const documentLabel = isVolunteer ? "VOLUNTEER CONFIRMATION" : "INVITATION";
@@ -220,4 +226,29 @@ export async function downloadInvitationPdf(data: InvitationData) {
   });
 
   pdf.save(filename);
+}
+
+export async function downloadInvitationPdf(data: InvitationData) {
+  if (data.role === "volunteer") {
+    return downloadPlainInvitationPdf(data);
+  }
+
+  try {
+    const { jsPDF } = await import("jspdf");
+    const template = GUEST_INVITATION_TEMPLATE;
+    const pdf = new jsPDF({
+      unit: "px",
+      format: [template.source.width, template.source.height],
+      orientation: "portrait",
+      hotfixes: ["px_scaling"],
+    });
+    await loadGuestInvitationFonts(pdf);
+    const artwork = await loadGuestInvitationArtwork();
+    renderGuestInvitationArtworkPdf(pdf, artwork, data);
+    const filename = `Casa-de-Bloom-${sanitizeFilenamePart(data.invitationNumber || "Invitation")}.pdf`;
+    pdf.save(filename);
+  } catch (error) {
+    console.error("Artwork invitation generation failed; using the plain PDF fallback.", error);
+    return downloadPlainInvitationPdf(data);
+  }
 }

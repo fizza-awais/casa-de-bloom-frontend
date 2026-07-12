@@ -151,6 +151,9 @@ export interface RegistrationEventDetail {
   name: string;
   event_type: string;
   event_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  location: string;
   capacity: number | null;
   male_quota: number | null;
   female_quota: number | null;

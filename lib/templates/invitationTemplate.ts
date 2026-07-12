@@ -4,6 +4,8 @@ export interface InvitationData {
   cbId: string;
   eventName: string;
   eventDate: string;
+  eventTime?: string;
+  eventLocation?: string;
   email: string;
   phone: string;
   role?: "guest" | "volunteer";

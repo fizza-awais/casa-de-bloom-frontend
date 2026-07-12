@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -17,8 +16,9 @@ import {
 import Button from "@/components/ui/Button";
 import { fetchRegistrationRecordDetail, RegistrationDetail, VolunteerDetail } from "@/lib/services/register";
 import { RegistrationFlowDetails } from "@/lib/registrationFlow";
-import { formatEventDate } from "@/lib/date";
+import { formatEventDate, formatEventTimeRange } from "@/lib/date";
 import { downloadInvitationPdf } from "@/lib/downloadInvitationPdf";
+import ResponsiveEventBackdrop from "@/components/ui/ResponsiveEventBackdrop";
 
 interface RootConfirmationProps {
   details: RegistrationFlowDetails;
@@ -74,6 +74,8 @@ export default function RootConfirmation({ details }: RootConfirmationProps) {
       cbId: displayCbId,
       eventName: eventLabel,
       eventDate: formattedDate,
+      eventTime: formatEventTimeRange(event?.start_time, event?.end_time),
+      eventLocation: event?.location,
       email: displayEmail,
       phone: displayPhone,
     });
@@ -82,12 +84,9 @@ export default function RootConfirmation({ details }: RootConfirmationProps) {
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center font-sans overflow-x-hidden px-4 py-12 md:py-16">
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image
-          src="/assets/images/bg_image_sunset_2026.webp"
+        <ResponsiveEventBackdrop
           alt="Casa de Bloom Event Vibe backdrop"
-          fill
-          priority
-          className="object-cover object-center pointer-events-none brightness-[0.8] scale-105"
+          className="brightness-[0.8]"
         />
         <div className="absolute inset-0 bg-transparent">
           <div className="absolute -top-1/4 -left-1/4 w-[80%] h-[80%] rounded-full bg-brand-light/40 blur-[130px]" />

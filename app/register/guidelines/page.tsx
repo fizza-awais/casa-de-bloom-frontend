@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ResponsiveEventBackdrop from "@/components/ui/ResponsiveEventBackdrop";
 
 export default function GuidelinesPage() {
   return (
@@ -8,12 +8,9 @@ export default function GuidelinesPage() {
       
       {/* Background System */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image
-        src="/assets/images/bg_image_sunset_2026.webp"
+        <ResponsiveEventBackdrop
           alt="Casa de Bloom Event Vibe backdrop"
-          fill
-          priority
-          className="object-cover object-center pointer-events-none brightness-[0.8] scale-105"
+          className="brightness-[0.8]"
         />
         <div className="absolute inset-0 bg-transparent">
           <div className="absolute -top-1/4 -left-1/4 w-[80%] h-[80%] rounded-full bg-brand-light/40 blur-[130px]" />
