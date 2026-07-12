@@ -78,6 +78,7 @@ export interface CustomStep {
   label: string;
   subtitle?: string;
   img: string;
+  desktopImg?: string;
   fields: FormField[];
 }
 
@@ -110,6 +111,7 @@ const COMPLIANCE_STEP = {
   label: "Final Confirmations",
   subtitle: "Confirm the essentials before we save your place.",
   img: "/assets/images/WhatsApp Image 2026-06-16 at 2.56.56 AM (3).webp",
+  desktopImg: "/assets/images/registration_desktop_confirmations.webp",
 };
 
 const COMPLIANCE_ERROR_MESSAGES: Record<string, string> = {
@@ -1596,7 +1598,7 @@ export default function MultiStepRegistrationForm({
                 }`}
               >
                 <Image
-                  src={s.img}
+                  src={s.desktopImg ?? s.img}
                   alt={s.label}
                   fill
                   sizes="45vw"

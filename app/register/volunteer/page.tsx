@@ -161,6 +161,7 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
       key: "profile",
       label: "Identity Profile",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).webp",
+      desktopImg: "/assets/images/registration_desktop_welcome.webp",
       fields: profileFields,
     },
     {
@@ -169,6 +170,7 @@ function buildVolunteerSteps(eventOptions: EventOption[], isReturningUser: boole
       subtitle:
         "Tell us how you may want to help create a beautiful Casa de Bloom experience.",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).webp",
+      desktopImg: "/assets/images/registration_desktop_community.webp",
       fields: [
         {
           name: "availabilityTime",

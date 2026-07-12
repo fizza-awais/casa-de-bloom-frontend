@@ -162,6 +162,7 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
       label: "Your Invitation Details",
       subtitle: "Choose your gathering and tell us who we are welcoming.",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (20).webp",
+      desktopImg: "/assets/images/registration_desktop_welcome.webp",
       fields: step1Fields,
     },
     {
@@ -169,6 +170,7 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
       label: "How You'll Join the Experience",
       subtitle: "Help us shape a thoughtful, welcoming day filled with connection, generosity, and shared experiences.",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).webp",
+      desktopImg: "/assets/images/registration_desktop_community.webp",
       fields: [
         {
           name: "attendanceMode",
