@@ -7,6 +7,10 @@ import { Mail, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { API_URL } from "@/lib/api";
 import ResponsiveEventBackdrop from "@/components/ui/ResponsiveEventBackdrop";
+import {
+  clearRegistrationDraft,
+  type RegistrationDraftType,
+} from "@/lib/registrationDraft";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,7 +43,17 @@ export default function LoginPage() {
       }
 
       setIsRedirecting(true);
-      router.replace("/dashboard");
+      const params = new URLSearchParams(window.location.search);
+      const requestedReturn = params.get("returnTo") || "/dashboard";
+      const returnTo =
+        requestedReturn.startsWith("/") && !requestedReturn.startsWith("//")
+          ? requestedReturn
+          : "/dashboard";
+      const draftType = params.get("registrationDraft");
+      if (draftType === "guest" || draftType === "volunteer") {
+        await clearRegistrationDraft(draftType as RegistrationDraftType);
+      }
+      router.replace(returnTo);
       router.refresh();
     } catch (err: unknown) {
       setError(

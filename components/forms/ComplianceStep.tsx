@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import type { RegistrationFormData, RegistrationFormValue } from "./MultiStepRegistrationForm";
 
 interface ComplianceStepProps {
   formData: RegistrationFormData;
   errors: Record<string, string>;
   onFieldChange: (name: string, value: RegistrationFormValue) => void;
+  onOpenGuidelines: () => void;
 }
 
 const CHECKBOX_ITEMS = [
@@ -36,6 +36,7 @@ export default function ComplianceStep({
   formData,
   errors,
   onFieldChange,
+  onOpenGuidelines,
 }: ComplianceStepProps) {
   const allChecked = CHECKBOX_ITEMS.every((item) => !!formData[item.id]);
 
@@ -51,14 +52,13 @@ export default function ComplianceStep({
         </p>
         <p className="text-xs sm:text-sm leading-relaxed text-ui-text-main">
           A few final promises before we create your invitation. The full Community Guidelines & Terms stay available{" "}
-          <Link
-            href="/comminut-guidelines"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={onOpenGuidelines}
             className="font-semibold text-brand-primary underline underline-offset-2"
           >
             here
-          </Link>
+          </button>
           .
         </p>
       </div>

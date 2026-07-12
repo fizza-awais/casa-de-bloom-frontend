@@ -4,7 +4,16 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  LogIn,
+  RotateCcw,
+  X,
+} from "lucide-react";
 import ComplianceStep from "./ComplianceStep";
 import ProfileImageUploader from "./ProfileImageUploader";
 import { RegistrationRedirectLoader } from "@/components/ui/PageLoader";
@@ -28,6 +37,13 @@ import {
   REGISTRATION_GENDER_ERROR,
   normalizeRegistrationGender,
 } from "@/lib/registrationGender";
+import {
+  clearRegistrationDraft,
+  loadRegistrationDraft,
+  loadRegistrationDraftPhotos,
+  saveRegistrationDraft,
+  saveRegistrationDraftPhotos,
+} from "@/lib/registrationDraft";
 
 export interface FormField {
   name: string;
@@ -223,10 +239,16 @@ export default function MultiStepRegistrationForm({
   const [isCheckingQuota, setIsCheckingQuota] = useState(false);
   const [selectedImages, setSelectedImages] = useState<SelectedProfileImage[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [draftPhotoWarning, setDraftPhotoWarning] = useState(false);
+  const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
   const formScrollRef = useRef<HTMLDivElement | null>(null);
   const previousStepIndexRef = useRef(currentIndex);
   const selectedImagesRef = useRef<SelectedProfileImage[]>([]);
   const formDataRef = useRef(formData);
+  const draftResumeIndexRef = useRef(0);
+  const draftSavingPausedRef = useRef(false);
 
   formDataRef.current = formData;
 
@@ -254,6 +276,92 @@ export default function MultiStepRegistrationForm({
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
   }, [selectedImages]);
+
+  useEffect(() => {
+    let active = true;
+    const restoreDraft = async () => {
+      const draft = loadRegistrationDraft(participantType);
+      const photoFiles = await loadRegistrationDraftPhotos(participantType);
+      if (!active) return;
+
+      if (draft) {
+        setFormData((current) => ({
+          ...current,
+          ...draft.formData,
+          password: "",
+          confirmPassword: "",
+          reality_show_understood: false,
+          photoReleaseAccepted: false,
+          positive_experience_agreed: false,
+          ageConfirmed: false,
+          guidelinesAccepted: false,
+        }));
+        const savedIndex = Math.min(
+          Math.max(draft.currentIndex, 0),
+          allSteps.length - 1,
+        );
+        const requiresPassword = steps[0]?.fields.some(
+          (field) => field.name === "password",
+        );
+        if (requiresPassword && savedIndex > 0) {
+          draftResumeIndexRef.current = savedIndex;
+          setCurrentIndex(0);
+        } else {
+          setCurrentIndex(savedIndex);
+        }
+      }
+
+      if (photoFiles.length) {
+        setSelectedImages(
+          photoFiles.map((file) => ({
+            id:
+              typeof crypto !== "undefined" && "randomUUID" in crypto
+                ? crypto.randomUUID()
+                : `${file.name}-${file.lastModified}-${Math.random()}`,
+            file,
+            previewUrl: URL.createObjectURL(file),
+          })),
+        );
+      }
+      setDraftRestored(Boolean(draft || photoFiles.length));
+      setDraftReady(true);
+    };
+    restoreDraft();
+    return () => {
+      active = false;
+    };
+    // Draft restoration must run only once for this registration role.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [participantType]);
+
+  useEffect(() => {
+    if (!draftReady || isRedirecting || draftSavingPausedRef.current) return;
+    const timer = window.setTimeout(() => {
+      saveRegistrationDraft(participantType, formData, currentIndex);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [currentIndex, draftReady, formData, isRedirecting, participantType]);
+
+  useEffect(() => {
+    if (!draftReady || isRedirecting || draftSavingPausedRef.current) return;
+    const timer = window.setTimeout(() => {
+      saveRegistrationDraftPhotos(
+        participantType,
+        selectedImages.map((image) => image.file),
+      ).then((saved) => setDraftPhotoWarning(!saved && selectedImages.length > 0));
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [draftReady, isRedirecting, participantType, selectedImages]);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      if (isRedirecting || draftSavingPausedRef.current) return;
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [draftReady, isRedirecting]);
 
   useEffect(() => {
     if (previousStepIndexRef.current === currentIndex) return;
@@ -442,6 +550,7 @@ export default function MultiStepRegistrationForm({
 
   const handleFieldChange = (name: string, value: RegistrationFormValue) => {
     if (isFieldLocked(name)) return;
+    draftSavingPausedRef.current = false;
 
     if (name === "email" || name === "eventDate") {
       setCheckedEmail(null);
@@ -587,68 +696,57 @@ export default function MultiStepRegistrationForm({
   };
 
   const validateStepWithPreflight = async (key: string): Promise<boolean> => {
-    const isValid = validateStep(key);
-    if (!isValid) return false;
-
     const stepObj = steps.find((s) => s.key === key);
     const hasEmailField = stepObj?.fields.some((field) => field.name === "email");
     const hasPasswordField = stepObj?.fields.some((field) => field.name === "password");
     const email = getStringValue("email").trim().toLowerCase();
     const eventDate = getStringValue("eventDate").trim();
 
-    if (!hasEmailField || !hasPasswordField || !email || !eventDate) return true;
+    if (hasEmailField && hasPasswordField && email && eventDate) {
+      const cachedResult =
+        checkedEmail?.email === email && checkedEmail.eventDate === eventDate
+          ? checkedEmail
+          : null;
 
-    if (checkedEmail?.email === email && checkedEmail.eventDate === eventDate) {
-      if (!checkedEmail.emailExists && !checkedEmail.isRegistered) return true;
-
-      setErrors((prev) => ({
-        ...prev,
-        email: checkedEmail.isRegistered
-          ? "This email already has an account. Please log in or use a different email."
-          : "This email already has an account. Please log in or use a different email.",
-      }));
-      return false;
-    }
-
-    setIsCheckingEmail(true);
-    try {
-      const result = await checkRegistrationEmail(email, eventDate, participantType);
-      setCheckedEmail({
-        email,
-        eventDate,
-        emailExists: result.emailExists,
-        isRegistered: result.isRegistered,
-      });
-
-      if (result.isRegistered || result.emailExists) {
+      if (cachedResult?.emailExists || cachedResult?.isRegistered) {
         setErrors((prev) => ({
           ...prev,
-          email: result.isRegistered
-            ? "This email already has an account. Please log in or use a different email."
-            : "This email already has an account. Please log in or use a different email.",
+          email: "This email already has an account. Please log in or use a different email.",
         }));
+        setImageError(null);
         return false;
       }
 
-      setErrors((prev) => {
-        const nextErrors = { ...prev };
-        delete nextErrors.email;
-        return nextErrors;
-      });
-      return true;
-    } catch (err: unknown) {
-      const field = err instanceof RegistrationCheckError && err.field ? err.field : "email";
-      setErrors((prev) => ({
-        ...prev,
-        [field]:
-          err instanceof Error
-            ? err.message
-            : "Unable to check registration availability right now. Please try again.",
-      }));
-      return false;
-    } finally {
-      setIsCheckingEmail(false);
+      if (!cachedResult) {
+        setIsCheckingEmail(true);
+        try {
+          const result = await checkRegistrationEmail(email, eventDate, participantType);
+          setCheckedEmail({ email, eventDate, ...result });
+          if (result.isRegistered || result.emailExists) {
+            setErrors((prev) => ({
+              ...prev,
+              email: "This email already has an account. Please log in or use a different email.",
+            }));
+            setImageError(null);
+            return false;
+          }
+        } catch (err: unknown) {
+          const field = err instanceof RegistrationCheckError && err.field ? err.field : "email";
+          setErrors((prev) => ({
+            ...prev,
+            [field]:
+              err instanceof Error
+                ? err.message
+                : "Unable to check registration availability right now. Please try again.",
+          }));
+          return false;
+        } finally {
+          setIsCheckingEmail(false);
+        }
+      }
     }
+
+    return validateStep(key);
   };
 
   const buildPayload = (): RegisterPayload => {
@@ -714,6 +812,7 @@ export default function MultiStepRegistrationForm({
   const handleSelectImages = (fileList: FileList | null) => {
     const files = Array.from(fileList ?? []);
     if (files.length === 0) return;
+    draftSavingPausedRef.current = false;
 
     const validationError = validateProfileImageFiles({
       files,
@@ -750,6 +849,7 @@ export default function MultiStepRegistrationForm({
 
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
+    draftSavingPausedRef.current = false;
     setHasAttemptedContinue(true);
     setApiError(null);
     const currentKey = allSteps[currentIndex].key;
@@ -763,7 +863,13 @@ export default function MultiStepRegistrationForm({
 
     if (!isLastStep) {
       setHasAttemptedContinue(false);
-      setCurrentIndex(currentIndex + 1);
+      if (currentIndex === 0 && draftResumeIndexRef.current > 0) {
+        const resumeIndex = draftResumeIndexRef.current;
+        draftResumeIndexRef.current = 0;
+        setCurrentIndex(resumeIndex);
+      } else {
+        setCurrentIndex(currentIndex + 1);
+      }
       return;
     }
 
@@ -780,6 +886,7 @@ export default function MultiStepRegistrationForm({
         images: selectedImages.map((image) => image.file),
       });
 
+      await clearRegistrationDraft(participantType);
       keepLoading = true;
       setIsRedirecting(true);
       window.sessionStorage.setItem(REGISTRATION_CELEBRATION_KEY, "1");
@@ -836,6 +943,52 @@ export default function MultiStepRegistrationForm({
     setApiError(null);
     setHasAttemptedContinue(false);
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+  };
+
+  const handleStartOver = async () => {
+    draftSavingPausedRef.current = true;
+    await clearRegistrationDraft(participantType);
+    selectedImages.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+    setSelectedImages([]);
+    setFormData({
+      reality_show_understood: false,
+      photoReleaseAccepted: false,
+      positive_experience_agreed: false,
+      ageConfirmed: false,
+      guidelinesAccepted: false,
+      ...initialFormData,
+    });
+    setCurrentIndex(0);
+    draftResumeIndexRef.current = 0;
+    setDraftRestored(false);
+    setDraftPhotoWarning(false);
+    setErrors({});
+    setApiError(null);
+    setCheckedEmail(null);
+  };
+
+  const handleExistingAccountLogin = async () => {
+    saveRegistrationDraft(participantType, formData, currentIndex);
+    await saveRegistrationDraftPhotos(
+      participantType,
+      selectedImages.map((image) => image.file),
+    );
+    const params = new URLSearchParams({
+      returnTo: "/dashboard#events",
+      registrationDraft: participantType,
+    });
+    router.push(`/login?${params.toString()}`);
+  };
+
+  const handleUseDifferentEmail = () => {
+    handleFieldChange("email", "");
+    setCheckedEmail(null);
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.email;
+      return next;
+    });
+    window.requestAnimationFrame(() => document.getElementById("email")?.focus());
   };
 
   const isStepValid = (key: string): boolean => {
@@ -1093,6 +1246,8 @@ export default function MultiStepRegistrationForm({
   const errorList = Object.values(errors);
   const firstErrorName = Object.keys(errors)[0];
   const currentKey = allSteps[currentIndex].key;
+  const showExistingAccountActions =
+    Boolean(checkedEmail?.emailExists) && currentIndex === 0;
   const currentStep = allSteps[currentIndex] as CustomStep;
   const isLastStep = currentIndex === allSteps.length - 1;
   const isCurrentStepValid = isStepValid(currentKey);
@@ -1126,6 +1281,20 @@ export default function MultiStepRegistrationForm({
   return (
     <main className="h-dvh overflow-hidden p-3 font-sans sm:p-4 lg:p-6">
       {isRedirecting && <RegistrationRedirectLoader />}
+      {isGuidelinesOpen && (
+        <div className="fixed inset-0 z-[70] flex flex-col bg-white" role="dialog" aria-modal="true" aria-label="Community Guidelines and Terms">
+          <div className="flex shrink-0 items-center justify-between border-b border-ui-border bg-white px-4 py-3 shadow-sm sm:px-6">
+            <div>
+              <p className="text-sm font-extrabold text-ui-text-main">Community Guidelines & Terms</p>
+              <p className="text-xs text-ui-text-muted">Your registration is safely waiting behind this window.</p>
+            </div>
+            <button type="button" onClick={() => setIsGuidelinesOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full text-ui-text-muted transition hover:bg-brand-light hover:text-brand-primary" aria-label="Return to registration">
+              <X size={20} />
+            </button>
+          </div>
+          <iframe src="/comminut-guidelines?embedded=1" title="Casa de Bloom Community Guidelines and Terms" className="min-h-0 flex-1 border-0" />
+        </div>
+      )}
       <div className="mx-auto flex h-full w-full max-w-6xl">
         <div className="relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-[2rem] border-2 border-white/50 bg-ui-card/30 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-2xl lg:flex-row">
           <div
@@ -1162,6 +1331,25 @@ export default function MultiStepRegistrationForm({
                 </div>
 
                 <div className="flex w-full flex-col gap-4 px-5 py-5 sm:px-7 sm:py-7 lg:min-h-full lg:justify-center lg:px-6 lg:py-6 xl:px-8 xl:py-8">
+                  {draftRestored && (
+                    <div className="flex items-start justify-between gap-3 rounded-2xl border border-status-active/25 bg-status-active/10 p-3 text-sm text-ui-text-main">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-status-active" />
+                        <div>
+                          <p className="font-bold">Welcome back. We restored your progress.</p>
+                          {draftResumeIndexRef.current > 0 && <p className="mt-0.5 text-xs text-ui-text-muted">Re-enter your password, then we&apos;ll return you to your saved step.</p>}
+                        </div>
+                      </div>
+                      <button type="button" onClick={handleStartOver} className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-brand-primary hover:underline">
+                        <RotateCcw size={13} /> Start over
+                      </button>
+                    </div>
+                  )}
+                  {draftPhotoWarning && (
+                    <div role="status" className="rounded-xl border border-brand-sunshine/60 bg-brand-sunshine/20 p-3 text-xs font-semibold text-ui-text-main">
+                      Your answers are saved, but this browser could not preserve the selected photos. Please attach them again before submitting.
+                    </div>
+                  )}
                   <div className="space-y-3">
                 <h1 className="text-xl font-extrabold tracking-tight text-ui-text-main sm:text-2xl">
                   {title}
@@ -1215,6 +1403,7 @@ export default function MultiStepRegistrationForm({
                     formData={formData}
                     errors={errors}
                     onFieldChange={handleFieldChange}
+                    onOpenGuidelines={() => setIsGuidelinesOpen(true)}
                   />
                 ) : (
                   <div className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
@@ -1314,11 +1503,36 @@ export default function MultiStepRegistrationForm({
                 </div>
               )}
 
+              {checkedEmail?.emailExists && currentIndex === 0 && (
+                <div className="rounded-2xl border border-brand-primary/25 bg-brand-light/35 p-4">
+                  <p className="text-sm font-extrabold text-ui-text-main">You already have a Casa de Bloom account.</p>
+                  <p className="mt-1 text-xs leading-relaxed text-ui-text-muted">Log in to register for this event from your member dashboard.</p>
+                </div>
+              )}
+
                   </div>
                 </div>
 
               {/* Actions stay visible while the current step scrolls. */}
               <div className="relative z-20 shrink-0 border-t border-white/60 bg-white/85 px-5 py-3 shadow-[0_-10px_30px_rgba(70,35,55,0.08)] backdrop-blur-xl sm:px-7 lg:px-6 xl:px-8">
+                {showExistingAccountActions ? (
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={handleExistingAccountLogin}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-primary px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-hover"
+                    >
+                      <LogIn size={16} /> Log In to Continue
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUseDifferentEmail}
+                      className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-ui-border bg-white/80 px-4 py-2.5 text-sm font-bold text-ui-text-main transition hover:bg-brand-light/40 sm:min-w-44"
+                    >
+                      Use a Different Email
+                    </button>
+                  </div>
+                ) : (
                 <div className="flex items-center gap-4">
                   {currentIndex > 0 && (
                     <Button
@@ -1368,6 +1582,7 @@ export default function MultiStepRegistrationForm({
                     )}
                   </Button>
                 </div>
+                )}
               </div>
             </form>
           </div>
