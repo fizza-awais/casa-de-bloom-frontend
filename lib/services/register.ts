@@ -40,6 +40,8 @@ export interface RegisterPayload {
   bringing_to_grill?: string;
   give_take_contribution?: string;
   service_offering?: string;
+  owns_business?: boolean;
+  interested_in_business_podcast?: boolean;
   willing_to_share_social?: boolean;
 
   // Volunteer specific fields
@@ -166,6 +168,8 @@ export interface RegistrationDetail {
   bringing_to_grill: string;
   give_take_contribution: string;
   service_offering: string;
+  owns_business: boolean | null;
+  interested_in_business_podcast: boolean | null;
   willing_to_share_social: boolean;
   status: string;
   created_at: string;

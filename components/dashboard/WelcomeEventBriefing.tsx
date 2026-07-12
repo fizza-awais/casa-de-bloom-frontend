@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   BadgeCheck,
   BriefcaseBusiness,
@@ -20,6 +20,9 @@ import Button from "@/components/ui/Button";
 import { formatEventDate } from "@/lib/date";
 import { REGISTRATION_CELEBRATION_KEY } from "@/lib/registrationCelebration";
 import { fetchEvents } from "@/lib/services/events";
+import BloomCelebration, {
+  type BloomCelebrationHandle,
+} from "@/components/effects/BloomCelebration";
 
 interface EventDetail {
   id?: string;
@@ -51,26 +54,6 @@ interface WelcomeEventBriefingProps {
   volunteerDetails?: DashboardEventRecord[];
 }
 
-interface ConfettiPiece {
-  id: number;
-  left: number;
-  drift: number;
-  delay: number;
-  duration: number;
-  rotate: number;
-  color: string;
-  size: number;
-}
-
-const CONFETTI_COLORS = [
-  "#FF3F82",
-  "#99CC00",
-  "#33C9DC",
-  "#FFD23F",
-  "#B32B5C",
-  "#1F1B24",
-];
-
 const beforeYouArriveItems = [
   {
     title: "Name tag",
@@ -94,19 +77,6 @@ const beforeYouArriveItems = [
   },
 ];
 
-function buildConfettiBurst(): ConfettiPiece[] {
-  return Array.from({ length: 34 }, (_, index) => ({
-    id: Date.now() + index,
-    left: 8 + Math.random() * 84,
-    drift: -90 + Math.random() * 180,
-    delay: Math.random() * 0.2,
-    duration: 1.6 + Math.random() * 1.2,
-    rotate: -240 + Math.random() * 480,
-    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
-    size: 7 + Math.random() * 7,
-  }));
-}
-
 function formatTimeRange(event?: EventDetail) {
   if (!event?.start_time && !event?.end_time) return "Time will be shared soon";
   if (event.start_time && event.end_time) {
@@ -121,7 +91,7 @@ export default function WelcomeEventBriefing({
   registrations = [],
   volunteerDetails = [],
 }: WelcomeEventBriefingProps) {
-  const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
+  const celebrationRef = useRef<BloomCelebrationHandle>(null);
   const [spotlightIndex, setSpotlightIndex] = useState(0);
   const [events, setEvents] = useState<EventDetail[]>([]);
   const [eventsError, setEventsError] = useState<string | null>(null);
@@ -173,27 +143,18 @@ export default function WelcomeEventBriefing({
     },
   ];
 
-  const fireConfetti = useCallback(() => {
-    const burst = buildConfettiBurst();
-    setConfetti((current) => [...current.slice(-20), ...burst]);
-    window.setTimeout(() => {
-      setConfetti((current) =>
-        current.filter(
-          (piece) => !burst.some((newPiece) => newPiece.id === piece.id)
-        )
-      );
-    }, 3200);
-  }, []);
-
   useEffect(() => {
     const shouldCelebrate =
       window.sessionStorage.getItem(REGISTRATION_CELEBRATION_KEY) === "1";
     if (!shouldCelebrate) return;
 
     window.sessionStorage.removeItem(REGISTRATION_CELEBRATION_KEY);
-    const timer = window.setTimeout(fireConfetti, 350);
+    const timer = window.setTimeout(
+      () => celebrationRef.current?.celebrate(),
+      350,
+    );
     return () => window.clearTimeout(timer);
-  }, [fireConfetti]);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -230,28 +191,10 @@ export default function WelcomeEventBriefing({
 
   return (
     <section className="dashboard-shine relative isolate overflow-hidden rounded-3xl border border-ui-border bg-white/80 p-4 shadow-sm backdrop-blur-md md:p-6">
-      <div
-        className="pointer-events-none absolute inset-0 z-30 overflow-hidden"
-        aria-hidden="true"
-      >
-        {confetti.map((piece) => (
-          <span
-            key={piece.id}
-            className="absolute top-0 rounded-sm opacity-90"
-            style={
-              {
-                left: `${piece.left}%`,
-                width: `${piece.size}px`,
-                height: `${piece.size * 1.45}px`,
-                backgroundColor: piece.color,
-                animation: `confetti-fall ${piece.duration}s ease-out ${piece.delay}s forwards`,
-                "--confetti-drift": `${piece.drift}px`,
-                "--confetti-rotate": `${piece.rotate}deg`,
-              } as React.CSSProperties
-            }
-          />
-        ))}
-      </div>
+      <BloomCelebration
+        ref={celebrationRef}
+        variant={isVolunteerExperience ? "volunteer" : "guest"}
+      />
 
       <div className="relative z-10 flex flex-col gap-4">
         <div className="dashboard-interactive-card dashboard-shine rounded-3xl border border-brand-primary/20 bg-gradient-to-br from-brand-light via-white to-brand-accent/10 p-4 text-ui-text-main shadow-sm md:p-5">
@@ -279,7 +222,7 @@ export default function WelcomeEventBriefing({
               rounded="2xl"
               size="sm"
               icon={<PartyPopper size={17} />}
-              onClick={fireConfetti}
+              onClick={() => celebrationRef.current?.celebrate()}
             >
               Celebrate
             </Button>

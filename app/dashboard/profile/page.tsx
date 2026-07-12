@@ -35,7 +35,11 @@ import {
 export default function ProfilePage() {
   const profile = useDashboardProfile();
   const { setProfile } = useDashboardProfileActions();
-  const latestReg = profile?.registrations?.[0] || {};
+  const latestReg = [...(profile?.registrations ?? [])].sort(
+    (a, b) =>
+      new Date(b.created_at ?? 0).getTime() -
+      new Date(a.created_at ?? 0).getTime(),
+  )[0] || {};
   const fullName = `${profile?.first_name || ""} ${
     profile?.last_name || ""
   }`.trim();
@@ -45,11 +49,13 @@ export default function ProfilePage() {
 
   const profileFormRef = useRef<FormComponentRef>(null);
   const socialsFormRef = useRef<FormComponentRef>(null);
+  const businessFormRef = useRef<FormComponentRef>(null);
   const [globalSaving, setGlobalSaving] = useState(false);
   const [selectedImages, setSelectedImages] = useState<SelectedProfileImage[]>([]);
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const selectedImagesRef = useRef<SelectedProfileImage[]>([]);
+  const hasGuestRegistration = (profile?.registrations?.length ?? 0) > 0;
 
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
@@ -151,13 +157,15 @@ export default function ProfilePage() {
       placeholder: "e.g. Designer",
       icon: <Briefcase size={16} />
     },
-    { 
-      name: "business_name", 
-      label: "Business Name", 
-      type: "text", 
-      placeholder: "e.g. Design Studio",
-      icon: <Building size={16} />
-    },
+    ...(!hasGuestRegistration
+      ? [{
+          name: "business_name",
+          label: "Business Name",
+          type: "text" as const,
+          placeholder: "e.g. Design Studio",
+          icon: <Building size={16} />,
+        }]
+      : []),
     { 
       name: "emergency_contact", 
       label: "Emergency Contact", 
@@ -173,6 +181,42 @@ export default function ProfilePage() {
       placeholder: "Allergies / Diets", 
       colSpan: 2,
       icon: <FileText size={16} />
+    },
+  ];
+
+  const businessInitialData = {
+    owns_business: latestReg.owns_business ?? null,
+    business_name: profile?.business_name || "",
+    interested_in_business_podcast:
+      latestReg.interested_in_business_podcast ?? null,
+  };
+
+  const businessFields: FormField[] = [
+    {
+      name: "owns_business",
+      label: "Do you own a business, brand, or creative venture?",
+      type: "binary-choice",
+      colSpan: 2,
+    },
+    {
+      name: "business_name",
+      label: "What is the name of your business or brand?",
+      type: "text",
+      colSpan: 2,
+      placeholder: "Your business or brand name",
+      icon: <Building size={16} />,
+      helperText: "Optional, but it helps us learn more about what you're building.",
+      visibleWhen: { field: "owns_business", equals: true },
+    },
+    {
+      name: "interested_in_business_podcast",
+      label: "Would you love the opportunity to be featured on the Casa de Bloom podcast and share your business story with our community, completely complimentary?",
+      type: "binary-choice",
+      required: true,
+      colSpan: 2,
+      requiredMessage: "Please let us know whether a complimentary Casa de Bloom podcast feature interests you.",
+      helperText: "A welcoming space to share what you've created, what inspires you, and help more people discover your work.",
+      visibleWhen: { field: "owns_business", equals: true },
     },
   ];
 
@@ -270,33 +314,63 @@ export default function ProfilePage() {
   };
 
   const handleGlobalSave = async () => {
-    if (!profileFormRef.current || !socialsFormRef.current) return;
+    if (
+      !profileFormRef.current ||
+      !socialsFormRef.current ||
+      (hasGuestRegistration && !businessFormRef.current)
+    ) return;
 
     const isProfileValid = profileFormRef.current.validate();
     const isSocialsValid = socialsFormRef.current.validate();
+    const isBusinessValid = businessFormRef.current?.validate() ?? true;
 
-    if (!isProfileValid || !isSocialsValid) return; 
+    if (!isProfileValid || !isSocialsValid || !isBusinessValid) return;
 
     setGlobalSaving(true);
     profileFormRef.current.setExternalApiError(null);
     socialsFormRef.current.setExternalApiError(null);
+    businessFormRef.current?.setExternalApiError(null);
     profileFormRef.current.setExternalSuccess(false);
     socialsFormRef.current.setExternalSuccess(false);
+    businessFormRef.current?.setExternalSuccess(false);
 
     try {
       const profileData = profileFormRef.current.getData();
       const socialsData = socialsFormRef.current.getData();
+      const businessData = businessFormRef.current?.getData() ?? {};
 
-      const updatedProfile = await patchMemberProfile(
-        buildMemberProfileFormData({
+      const requestData = buildMemberProfileFormData({
           data: {
             ...profileData,
             ...socialsData,
+            ...businessData,
           },
           images: selectedImages.map((image) => image.file),
           removeImageIds: removedImageIds,
-        }),
-      );
+        });
+
+      if (hasGuestRegistration) {
+        const ownsBusiness = businessData.owns_business;
+        if (typeof ownsBusiness === "boolean") {
+          requestData.set("owns_business", String(ownsBusiness));
+          requestData.set(
+            "business_name",
+            ownsBusiness ? String(businessData.business_name ?? "") : "",
+          );
+        }
+
+        if (
+          ownsBusiness === true &&
+          typeof businessData.interested_in_business_podcast === "boolean"
+        ) {
+          requestData.set(
+            "interested_in_business_podcast",
+            String(businessData.interested_in_business_podcast),
+          );
+        }
+      }
+
+      const updatedProfile = await patchMemberProfile(requestData);
 
       selectedImages.forEach((image) => {
         URL.revokeObjectURL(image.previewUrl);
@@ -308,6 +382,7 @@ export default function ProfilePage() {
 
       profileFormRef.current.setExternalSuccess(true);
       socialsFormRef.current.setExternalSuccess(true);
+      businessFormRef.current?.setExternalSuccess(true);
     } catch (err: unknown) {
       const fallbackMsg =
         err instanceof Error
@@ -315,6 +390,7 @@ export default function ProfilePage() {
           : "Failed to save profile structural updates.";
       profileFormRef.current.setExternalApiError(fallbackMsg);
       socialsFormRef.current.setExternalApiError(fallbackMsg);
+      businessFormRef.current?.setExternalApiError(fallbackMsg);
     } finally {
       setGlobalSaving(false);
     }
@@ -416,6 +492,31 @@ export default function ProfilePage() {
               onSubmit={() => {}}
             />
           </section>
+
+          {hasGuestRegistration && (
+            <section
+              className="dashboard-reveal dashboard-interactive-card rounded-3xl border border-brand-primary/20 bg-white/80 p-5 shadow-sm backdrop-blur-md md:p-7"
+              style={{ "--dashboard-delay": "180ms" } as React.CSSProperties}
+            >
+              <FormComponent
+                ref={businessFormRef}
+                title={
+                  <>
+                    <span className="dashboard-float-icon flex h-9 w-9 items-center justify-center rounded-xl bg-brand-light text-brand-primary">
+                      <Building size={18} />
+                    </span>
+                    Business & Creative Work
+                  </>
+                }
+                subtitle="Share what you're building and how Casa de Bloom may help your story reach more people."
+                fields={businessFields}
+                initialData={businessInitialData}
+                submitLabel={null}
+                successMessage="Business and podcast preferences updated successfully!"
+                onSubmit={() => {}}
+              />
+            </section>
+          )}
 
           <section
             className="dashboard-reveal dashboard-shine rounded-3xl border border-brand-secondary/30 bg-brand-secondary/5 p-5 shadow-sm md:p-6"

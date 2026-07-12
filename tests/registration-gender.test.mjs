@@ -32,7 +32,7 @@ test("backend gender errors render inline instead of as a generic banner", () =>
   assert.match(formSource, /err instanceof RegistrationApiError && err\.fieldErrors\.gender/);
   assert.match(formSource, /setErrors\(\{\s*gender:\s*err\.fieldErrors\.gender\s*\}\)/);
   assert.match(formSource, /setApiError\(null\)/);
-  assert.match(formSource, /getElementById\("gender-error"\)/);
+  assert.match(formSource, /scrollToRegistrationError\("gender-error"\)/);
 });
 
 test("gender quota error is preserved from API field response", () => {

@@ -57,7 +57,7 @@ export default function LoginPage() {
       {/* Background Graphic elements */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src="/assets/images/bg_image.webp"
+          src="/assets/images/bg_image_sunset_2026.webp"
           alt="Casa de Bloom Backdrop"
           fill
           priority

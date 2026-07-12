@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 export interface FormField {
   name: string;
   label: string;
-  type: "text" | "email" | "tel" | "url" | "password" | "select" | "textarea" | "toggle";
+  type: "text" | "email" | "tel" | "url" | "password" | "select" | "textarea" | "toggle" | "binary-choice";
   required?: boolean;
   isEditable?: boolean; 
   colSpan?: 1 | 2;
@@ -15,6 +15,11 @@ export interface FormField {
   icon?: React.ReactNode;
   requiredMessage?: string;
   invalidMessage?: string;
+  helperText?: string;
+  visibleWhen?: {
+    field: string;
+    equals: unknown;
+  };
 }
 
 interface FormComponentProps {
@@ -46,6 +51,8 @@ const selectClass =
   "w-full bg-transparent text-ui-text-main text-sm focus:outline-none pr-8 pt-5 pb-1 appearance-none cursor-pointer";
 
 const isFieldEditable = (field: FormField) => field.isEditable !== false;
+const isFieldVisible = (field: FormField, data: Record<string, any>) =>
+  !field.visibleWhen || data[field.visibleWhen.field] === field.visibleWhen.equals;
 
 export const FormComponent = forwardRef<FormComponentRef, FormComponentProps>(function FormComponent(
   {
@@ -67,20 +74,32 @@ export const FormComponent = forwardRef<FormComponentRef, FormComponentProps>(fu
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleFieldChange = (name: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setShowSuccess(false);
-    if (errors[name]) {
-      setErrors((prev) => {
-        const n = { ...prev };
-        delete n[name];
-        return n;
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      fields.forEach((field) => {
+        if (field.visibleWhen && !isFieldVisible(field, updated)) {
+          updated[field.name] = null;
+        }
       });
-    }
+      return updated;
+    });
+    setShowSuccess(false);
+    setErrors((prev) => {
+      const nextErrors = { ...prev };
+      const updated = { ...formData, [name]: value };
+      delete nextErrors[name];
+      fields.forEach((field) => {
+        if (!isFieldVisible(field, updated)) {
+          delete nextErrors[field.name];
+        }
+      });
+      return nextErrors;
+    });
   };
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    fields.forEach((field) => {
+    fields.filter((field) => isFieldVisible(field, formData)).forEach((field) => {
       if (!isFieldEditable(field)) return;
       const val = formData[field.name];
       if (
@@ -197,6 +216,40 @@ export const FormComponent = forwardRef<FormComponentRef, FormComponentProps>(fu
             </div>
           </div>
         );
+      case "binary-choice": {
+        const selectedValue = formData[field.name];
+        return (
+          <fieldset className={`border-b border-ui-border py-3 mt-2 ${disabledClass}`}>
+            <legend className="text-sm font-medium text-ui-text-main">
+              {field.label} {field.required ? "*" : ""}
+            </legend>
+            <div className="mt-2 grid grid-cols-2 gap-2" role="group">
+              {[
+                { label: "Yes", value: true },
+                { label: "No", value: false },
+              ].map((option) => {
+                const isSelected = selectedValue === option.value;
+                return (
+                  <button
+                    key={option.label}
+                    type="button"
+                    aria-pressed={isSelected}
+                    disabled={!isEditable}
+                    onClick={() => handleFieldChange(field.name, option.value)}
+                    className={`h-10 rounded-lg border px-4 text-sm font-semibold transition-colors ${
+                      isSelected
+                        ? "border-brand-primary bg-brand-primary text-white shadow-sm"
+                        : "border-ui-border bg-white/70 text-ui-text-main hover:border-brand-primary/60"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        );
+      }
       case "password": {
         const isVisible = !!visiblePasswords[field.name];
         return (
@@ -269,13 +322,18 @@ export const FormComponent = forwardRef<FormComponentRef, FormComponentProps>(fu
 
       <form onSubmit={handleSubmit} className="space-y-6 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
-          {fields.map((field) => {
-            const isFullWidth = field.colSpan === 2 || field.type === "textarea" || field.type === "toggle";
+          {fields.filter((field) => isFieldVisible(field, formData)).map((field) => {
+            const isFullWidth = field.colSpan === 2 || field.type === "textarea" || field.type === "toggle" || field.type === "binary-choice";
             return (
               <div key={field.name} className={isFullWidth ? "sm:col-span-2" : ""}>
                 {renderField(field)}
                 {errors[field.name] && (
                   <p className="text-xs text-danger-600 -mt-3 pl-1 font-medium mb-3">{errors[field.name]}</p>
+                )}
+                {field.helperText && !errors[field.name] && (
+                  <p className="-mt-1 mb-3 pl-1 text-xs leading-5 text-ui-text-muted">
+                    {field.helperText}
+                  </p>
                 )}
               </div>
             );

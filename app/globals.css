@@ -107,18 +107,96 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 
-@keyframes confetti-fall {
+@keyframes bloom-celebration-fall {
   0% {
     opacity: 0;
-    transform: translate3d(0, -18px, 0) rotate(0deg);
+    transform: translate3d(0, -18px, 0) rotate(-8deg) scale(0.74);
   }
-  12% {
-    opacity: 1;
+  14% {
+    opacity: 0.92;
+  }
+  86% {
+    opacity: 0.86;
   }
   100% {
     opacity: 0;
-    transform: translate3d(var(--confetti-drift), 420px, 0) rotate(var(--confetti-rotate));
+    transform: translate3d(var(--bloom-drift), var(--bloom-fall), 0)
+      rotate(var(--bloom-rotate)) scale(var(--bloom-end-scale));
   }
+}
+
+.bloom-celebration-piece {
+  position: absolute;
+  top: -20px;
+  animation-name: bloom-celebration-fall;
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.bloom-shape {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.bloom-shape-petal {
+  height: 125%;
+  border-radius: 72% 18% 68% 32%;
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.72), var(--bloom-color) 44%);
+  box-shadow: inset -1px -2px 3px rgb(128 28 67 / 0.16), 0 2px 5px rgb(90 25 50 / 0.1);
+}
+
+.bloom-shape-sparkle {
+  background: linear-gradient(145deg, #fff7d9, var(--bloom-color) 48%, #c28d31);
+  clip-path: polygon(50% 0%, 60% 39%, 100% 50%, 60% 61%, 50% 100%, 40% 61%, 0% 50%, 40% 39%);
+  filter: drop-shadow(0 0 4px rgb(231 197 121 / 0.55));
+}
+
+.bloom-shape-heart {
+  position: relative;
+  height: 68%;
+  width: 68%;
+  margin: 16%;
+  border-radius: 2px;
+  background: var(--bloom-color);
+  box-shadow: 0 2px 4px rgb(140 30 70 / 0.14);
+  transform: rotate(45deg);
+}
+
+.bloom-shape-heart::before,
+.bloom-shape-heart::after {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: inherit;
+  content: "";
+}
+
+.bloom-shape-heart::before {
+  left: -50%;
+}
+
+.bloom-shape-heart::after {
+  top: -50%;
+}
+
+.bloom-shape-pearl {
+  border: 1px solid rgb(224 199 186 / 0.58);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff 0 18%, var(--bloom-color) 55%, #e7d4ca 100%);
+  box-shadow: 0 2px 6px rgb(116 77 91 / 0.14);
+}
+
+.bloom-shape-ribbon {
+  width: 62%;
+  margin-left: 19%;
+  border-radius: 70% 24% 65% 30%;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.48), var(--bloom-color));
+  box-shadow: 0 2px 4px rgb(104 55 65 / 0.12);
+  transform: skewX(-14deg);
 }
 
 @keyframes dashboard-rise-in {
@@ -225,6 +303,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bloom-celebration-piece {
+    display: none;
+    animation: none !important;
+  }
+
   .dashboard-reveal,
   .dashboard-float-icon,
   .dashboard-value-swap,

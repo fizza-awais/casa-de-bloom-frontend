@@ -69,6 +69,7 @@ export default function ComplianceStep({
             <div key={item.id}>
               <label className="flex items-start gap-3 text-sm font-medium text-ui-text-main cursor-pointer select-none">
                 <input
+                  id={item.id}
                   type="checkbox"
                   checked={!!formData[item.id]}
                   onChange={(e) => onFieldChange(item.id, e.target.checked)}
@@ -77,7 +78,12 @@ export default function ComplianceStep({
                 <span>{item.label}</span>
               </label>
               {errors[item.id] && (
-                <p className="mt-1 pl-7 text-left text-xs font-medium text-danger-500">
+                <p
+                  id={`${item.id}-error`}
+                  data-registration-error="true"
+                  data-field={item.id}
+                  className="mt-1 pl-7 text-left text-xs font-medium text-danger-500"
+                >
                   {errors[item.id]}
                 </p>
               )}

@@ -96,7 +96,11 @@ export default function ProfileImageUploader({
       </div>
 
       {error && (
-        <p className="mt-3 rounded-2xl border border-danger-500/25 bg-danger-500/10 px-3 py-2 text-xs font-semibold text-danger-600">
+        <p
+          id="profile-images-error"
+          data-registration-error="true"
+          className="mt-3 rounded-2xl border border-danger-500/25 bg-danger-500/10 px-3 py-2 text-xs font-semibold text-danger-600"
+        >
           {error}
         </p>
       )}

@@ -41,7 +41,8 @@ export interface FormField {
     | "number"
     | "select"
     | "textarea"
-    | "toggle";
+    | "toggle"
+    | "binary-choice";
   required?: boolean;
   colSpan?: 1 | 2;
   placeholder?: string;
@@ -50,6 +51,10 @@ export interface FormField {
   requiredMessage?: string;
   invalidMessage?: string;
   helperText?: string;
+  visibleWhen?: {
+    field: string;
+    equals: RegistrationFormValue;
+  };
 }
 
 export interface CustomStep {
@@ -123,6 +128,13 @@ const hasFieldValue = (value: RegistrationFormValue): boolean =>
   value !== null &&
   value !== "" &&
   (typeof value !== "string" || !!value.trim());
+
+const isFieldVisible = (
+  field: FormField,
+  data: RegistrationFormData,
+): boolean =>
+  !field.visibleWhen ||
+  data[field.visibleWhen.field] === field.visibleWhen.equals;
 
 const MIN_EXACT_AGE = 21;
 const MAX_EXACT_AGE = 120;
@@ -217,6 +229,27 @@ export default function MultiStepRegistrationForm({
   const formDataRef = useRef(formData);
 
   formDataRef.current = formData;
+
+  const scrollToRegistrationError = (targetId?: string) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const container = formScrollRef.current;
+        const target = targetId
+          ? document.getElementById(targetId)
+          : container?.querySelector<HTMLElement>(
+              '[data-registration-error="true"]',
+            );
+
+        if (!target) return;
+
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        const fieldName = target.dataset.field;
+        if (fieldName) {
+          document.getElementById(fieldName)?.focus({ preventScroll: true });
+        }
+      });
+    });
+  };
 
   useEffect(() => {
     selectedImagesRef.current = selectedImages;
@@ -417,9 +450,21 @@ export default function MultiStepRegistrationForm({
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
+      steps.flatMap((step) => step.fields).forEach((field) => {
+        if (field.visibleWhen && !isFieldVisible(field, updated)) {
+          updated[field.name] = null;
+        }
+      });
+
       // Perform real-time validation updates
       setErrors((prevErrors) => {
         const nextErrors = { ...prevErrors };
+
+        steps.flatMap((step) => step.fields).forEach((field) => {
+          if (!isFieldVisible(field, updated)) {
+            delete nextErrors[field.name];
+          }
+        });
 
         // 1. Password validation
         if (name === "password") {
@@ -521,12 +566,14 @@ export default function MultiStepRegistrationForm({
     } else {
       const stepObj = steps.find((s) => s.key === key);
       if (stepObj) {
-        stepObj.fields.forEach((field) => {
-          const fieldError = getFieldError(field, formData);
-          if (fieldError) {
-            errs[field.name] = fieldError;
-          }
-        });
+        stepObj.fields
+          .filter((field) => isFieldVisible(field, formData))
+          .forEach((field) => {
+            const fieldError = getFieldError(field, formData);
+            if (fieldError) {
+              errs[field.name] = fieldError;
+            }
+          });
       }
 
       if (key === steps[0]?.key && initialProfileImages.length + selectedImages.length === 0) {
@@ -640,8 +687,20 @@ export default function MultiStepRegistrationForm({
       base.emergency_contact = getOptionalStringValue("emergencyContact");
       base.food_allergies = getOptionalStringValue("foodAllergies");
       base.bringing_to_grill = getOptionalStringValue("communityGrill");
-      base.give_take_contribution = getOptionalStringValue("giveTakeContribution");
       base.service_offering = getOptionalStringValue("serviceOffering");
+      base.business_name =
+        formData.ownsBusiness === true
+          ? getOptionalStringValue("businessName")
+          : undefined;
+      base.owns_business =
+        typeof formData.ownsBusiness === "boolean"
+          ? formData.ownsBusiness
+          : undefined;
+      base.interested_in_business_podcast =
+        formData.ownsBusiness === true &&
+        typeof formData.interestedInBusinessPodcast === "boolean"
+          ? formData.interestedInBusinessPodcast
+          : undefined;
       base.willing_to_share_social = !!formData.spreadTheWord;
     } else {
       base.availability = getOptionalStringValue("availabilityTime");
@@ -696,11 +755,7 @@ export default function MultiStepRegistrationForm({
     const currentKey = allSteps[currentIndex].key;
 
     if (!(await validateStepWithPreflight(currentKey))) {
-      window.requestAnimationFrame(() => {
-        document
-          .getElementById("form-errors")
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
+      scrollToRegistrationError();
       return;
     }
 
@@ -760,11 +815,7 @@ export default function MultiStepRegistrationForm({
         if (genderStepIndex >= 0) {
           setCurrentIndex(genderStepIndex);
         }
-        window.setTimeout(() => {
-          document
-            .getElementById("gender-error")
-            ?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 0);
+        scrollToRegistrationError("gender-error");
         return;
       }
       setApiError(
@@ -772,9 +823,7 @@ export default function MultiStepRegistrationForm({
           ? err.message
           : "Something went wrong. Please try again."
       );
-      document
-        .getElementById("api-error")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      scrollToRegistrationError("api-error");
     } finally {
       if (!keepLoading) {
         setIsSubmitting(false);
@@ -799,9 +848,9 @@ export default function MultiStepRegistrationForm({
     const stepObj = steps.find((s) => s.key === key);
     if (!stepObj) return true;
 
-    return stepObj.fields.every((field) => {
-      return !getFieldError(field, formData);
-    });
+    return stepObj.fields
+      .filter((field) => isFieldVisible(field, formData))
+      .every((field) => !getFieldError(field, formData));
   };
 
   const renderField = (field: FormField) => {
@@ -913,6 +962,47 @@ export default function MultiStepRegistrationForm({
             </div>
           </div>
         );
+      case "binary-choice": {
+        const selectedValue = formData[field.name];
+        return (
+          <fieldset
+            id={field.name}
+            tabIndex={-1}
+            className="border-b border-ui-border py-3 mt-2"
+            aria-describedby={
+              errors[field.name] ? `${field.name}-error` : undefined
+            }
+          >
+            <legend className="text-sm text-ui-text-main font-medium">
+              {field.label} {field.required ? "*" : ""}
+            </legend>
+            <div className="mt-2 grid grid-cols-2 gap-2" role="group">
+              {[
+                { label: "Yes", value: true },
+                { label: "No", value: false },
+              ].map((option) => {
+                const isSelected = selectedValue === option.value;
+                return (
+                  <button
+                    key={option.label}
+                    type="button"
+                    aria-pressed={isSelected}
+                    disabled={isLocked}
+                    onClick={() => handleFieldChange(field.name, option.value)}
+                    className={`h-10 rounded-lg border px-4 text-sm font-semibold transition-colors ${
+                      isSelected
+                        ? "border-brand-primary bg-brand-primary text-white shadow-sm"
+                        : "border-ui-border bg-white/70 text-ui-text-main hover:border-brand-primary/60"
+                    } ${isLocked ? lockedControlClass : ""}`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        );
+      }
       case "password": {
         const isVisible = !!visiblePasswords[field.name];
         return (
@@ -1001,6 +1091,7 @@ export default function MultiStepRegistrationForm({
   };
 
   const errorList = Object.values(errors);
+  const firstErrorName = Object.keys(errors)[0];
   const currentKey = allSteps[currentIndex].key;
   const currentStep = allSteps[currentIndex] as CustomStep;
   const isLastStep = currentIndex === allSteps.length - 1;
@@ -1033,39 +1124,45 @@ export default function MultiStepRegistrationForm({
       : "Complete the required fields before continuing.";
 
   return (
-    <main className="min-h-dvh overflow-x-hidden p-3 font-sans sm:p-4 lg:h-dvh lg:overflow-hidden lg:p-6">
+    <main className="h-dvh overflow-hidden p-3 font-sans sm:p-4 lg:p-6">
       {isRedirecting && <RegistrationRedirectLoader />}
-      <div className="mx-auto flex w-full max-w-6xl lg:h-full lg:max-h-[calc(100dvh-3rem)]">
-        <div className="relative flex w-full min-h-0 flex-col overflow-hidden rounded-[2rem] border-2 border-white/50 bg-ui-card/30 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-2xl lg:h-full lg:flex-row">
-          <div className="relative h-44 w-full shrink-0 overflow-hidden bg-ui-text-main sm:h-52 lg:hidden">
-            {allSteps.map((s, index) => (
-              <div
-                key={`mobile-${s.key}`}
-                className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
-                  currentIndex === index ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
-              >
-                <Image
-                  src={s.img}
-                  alt={s.label}
-                  fill
-                  sizes="(max-width: 1023px) calc(100vw - 2rem), 45vw"
-                  priority={index === 0}
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
-
+      <div className="mx-auto flex h-full w-full max-w-6xl">
+        <div className="relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-[2rem] border-2 border-white/50 bg-ui-card/30 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-2xl lg:flex-row">
           <div
-            ref={formScrollRef}
-            className="relative z-10 flex min-h-0 w-full flex-col overflow-y-auto p-5 sm:p-7 lg:w-[58%] lg:p-6 xl:p-8 custom-scrollbar"
+            className="relative z-10 flex min-h-0 w-full flex-1 flex-col overflow-hidden lg:w-[58%] lg:flex-none"
           >
             <form
               onSubmit={handleNext}
-              className="my-auto flex w-full flex-col gap-4"
+              className="flex h-full min-h-0 w-full flex-col"
             >
-              <div className="space-y-3">
+              <div
+                ref={formScrollRef}
+                className="custom-scrollbar min-h-0 flex-1 overflow-y-auto"
+              >
+                <div className="relative h-40 w-full shrink-0 overflow-hidden bg-ui-text-main sm:h-48 lg:hidden">
+                  {allSteps.map((s, index) => (
+                    <div
+                      key={`mobile-${s.key}`}
+                      className={`absolute inset-0 h-full w-full transition-opacity duration-700 ease-in-out ${
+                        currentIndex === index
+                          ? "z-10 opacity-100"
+                          : "z-0 opacity-0"
+                      }`}
+                    >
+                      <Image
+                        src={s.img}
+                        alt={s.label}
+                        fill
+                        sizes="(max-width: 1023px) calc(100vw - 2rem), 45vw"
+                        priority={index === 0}
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex w-full flex-col gap-4 px-5 py-5 sm:px-7 sm:py-7 lg:min-h-full lg:justify-center lg:px-6 lg:py-6 xl:px-8 xl:py-8">
+                  <div className="space-y-3">
                 <h1 className="text-xl font-extrabold tracking-tight text-ui-text-main sm:text-2xl">
                   {title}
                 </h1>
@@ -1121,12 +1218,14 @@ export default function MultiStepRegistrationForm({
                   />
                 ) : (
                   <div className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
-                    {(allSteps[currentIndex] as CustomStep).fields.map(
-                      (field) => {
+                    {(allSteps[currentIndex] as CustomStep).fields
+                      .filter((field) => isFieldVisible(field, formData))
+                      .map((field) => {
                         const isFullWidth =
                           field.colSpan === 2 ||
                           field.type === "textarea" ||
-                          field.type === "toggle";
+                          field.type === "toggle" ||
+                          field.type === "binary-choice";
                         return (
                           <div
                             key={field.name}
@@ -1136,6 +1235,8 @@ export default function MultiStepRegistrationForm({
                             {errors[field.name] && (
                               <p
                                 id={`${field.name}-error`}
+                                data-registration-error="true"
+                                data-field={field.name}
                                 className="text-xs text-danger-500 -mt-2 pl-1 font-medium mb-2"
                               >
                                 {errors[field.name]}
@@ -1148,8 +1249,7 @@ export default function MultiStepRegistrationForm({
                             )}
                           </div>
                         );
-                      }
-                    )}
+                      })}
                     {currentIndex === 0 && (
                       <div className="sm:col-span-2">
                         <ProfileImageUploader
@@ -1170,6 +1270,8 @@ export default function MultiStepRegistrationForm({
                 <div
                   id="quota-error"
                   role="alert"
+                  data-registration-error="true"
+                  data-field="eventDate"
                   className="flex items-start gap-2 rounded-xl border border-danger-500/30 bg-danger-500/10 p-3 text-xs font-semibold text-danger-600"
                 >
                   <AlertCircle size={16} className="mt-0.5 shrink-0" />
@@ -1182,6 +1284,7 @@ export default function MultiStepRegistrationForm({
                 <div
                   id="form-validation-hint"
                   aria-live="polite"
+                  data-registration-error="true"
                   className="flex items-start gap-2 rounded-xl border border-brand-sunshine/60 bg-brand-sunshine/20 p-3 text-xs font-semibold text-ui-text-main"
                 >
                   <AlertCircle
@@ -1197,6 +1300,7 @@ export default function MultiStepRegistrationForm({
                 <div
                   id="api-error"
                   role="alert"
+                  data-registration-error="true"
                   className="flex items-start gap-3 bg-danger-500/10 backdrop-blur-sm border border-danger-500/30 text-danger-600 rounded-2xl p-4 text-sm shadow-sm"
                 >
                   <AlertCircle
@@ -1210,53 +1314,60 @@ export default function MultiStepRegistrationForm({
                 </div>
               )}
 
-              {/* Actions */}
-              <div className="relative z-10 flex items-center gap-4 pt-2">
-                {currentIndex > 0 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    rounded="2xl"
-                    size="lg"
-                    className="cursor-pointer"
-                    onClick={handleBack}
-                    disabled={isSubmitting}
-                  >
-                    Back
-                  </Button>
-                )}
-                <Button
-                  type="submit"
-                  variant="primary"
-                  rounded="2xl"
-                  fullWidth
-                  size="lg"
-                  disabled={isContinueDisabled}
-                  aria-describedby={
-                    errorList.length > 0
-                      ? "form-errors"
-                      : showValidationPrompt
-                      ? "form-validation-hint"
-                      : undefined
-                  }
-                >
-                  {isSubmitting || isCheckingEmail || isRedirecting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 size={16} className="animate-spin" />
-                      {isRedirecting
-                        ? "Preparing invitation..."
-                        : isCheckingEmail
-                        ? "Checking email..."
-                        : isCheckingQuota
-                        ? "Checking availability..."
-                        : "Submitting..."}
-                    </span>
-                  ) : isLastStep ? (
-                    finalSubmitLabel
-                  ) : (
-                    "Continue"
+                  </div>
+                </div>
+
+              {/* Actions stay visible while the current step scrolls. */}
+              <div className="relative z-20 shrink-0 border-t border-white/60 bg-white/85 px-5 py-3 shadow-[0_-10px_30px_rgba(70,35,55,0.08)] backdrop-blur-xl sm:px-7 lg:px-6 xl:px-8">
+                <div className="flex items-center gap-4">
+                  {currentIndex > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      rounded="2xl"
+                      size="lg"
+                      className="cursor-pointer"
+                      onClick={handleBack}
+                      disabled={isSubmitting}
+                    >
+                      Back
+                    </Button>
                   )}
-                </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    rounded="2xl"
+                    fullWidth
+                    size="lg"
+                    disabled={isContinueDisabled}
+                    aria-describedby={
+                      firstErrorName
+                        ? `${firstErrorName}-error`
+                        : imageError
+                        ? "profile-images-error"
+                        : showValidationPrompt
+                        ? "form-validation-hint"
+                        : undefined
+                    }
+                  >
+                    {isSubmitting || isCheckingEmail || isRedirecting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 size={16} className="animate-spin" />
+                        {isRedirecting
+                          ? "Preparing invitation..."
+                          : isCheckingEmail
+                          ? "Checking email..."
+                          : isCheckingQuota
+                          ? "Checking availability..."
+                          : "Submitting..."}
+                      </span>
+                    ) : isLastStep ? (
+                      finalSubmitLabel
+                    ) : (
+                      "Continue"
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </div>

@@ -29,8 +29,10 @@ const INITIAL_FORM_DATA = {
   hearAboutUs: "",
   whyAttend: "",
   communityGrill: "",
-  giveTakeContribution: "",
   serviceOffering: "",
+  ownsBusiness: null,
+  businessName: "",
+  interestedInBusinessPodcast: null,
   spreadTheWord: false,
 };
 
@@ -165,7 +167,7 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
     {
       key: "community",
       label: "How You'll Join the Experience",
-      subtitle: "Help us prepare the room, the potluck, and the Give & Take table.",
+      subtitle: "Help us shape a thoughtful, welcoming day filled with connection, generosity, and shared experiences.",
       img: "/assets/images/WhatsApp Image 2026-06-16 at 2.57.07 AM (2).webp",
       fields: [
         {
@@ -204,18 +206,37 @@ function buildGuestSteps(eventOptions: EventOption[], isReturningUser: boolean):
           helperText: "This helps us build one generous table together. You can update your plan later.",
         },
         {
-          name: "giveTakeContribution",
-          label: "What might you bring for the Give & Take Table?",
-          type: "textarea",
-          colSpan: 2,
-          helperText: "Optional. Choose something someone else may love.",
-        },
-        {
           name: "serviceOffering",
           label: "Would you like to offer a service, giveaway, collaboration, or creative contribution?",
           type: "textarea",
           colSpan: 2,
           helperText: "Share anything you may want to offer to the Casa de Bloom community, such as photography, video, wellness, beauty, coaching, products, giveaways, or creative support.",
+        },
+        {
+          name: "ownsBusiness",
+          label: "Do you own a business, brand, or creative venture?",
+          type: "binary-choice",
+          required: true,
+          colSpan: 2,
+          requiredMessage: "Please let us know whether you own a business, brand, or creative venture.",
+        },
+        {
+          name: "businessName",
+          label: "What is the name of your business or brand?",
+          type: "text",
+          colSpan: 2,
+          helperText: "Optional, but it helps us learn more about what you're building.",
+          visibleWhen: { field: "ownsBusiness", equals: true },
+        },
+        {
+          name: "interestedInBusinessPodcast",
+          label: "Would you love the opportunity to be featured on the Casa de Bloom podcast and share your business story with our community, completely complimentary?",
+          type: "binary-choice",
+          required: true,
+          colSpan: 2,
+          requiredMessage: "Please let us know whether a complimentary Casa de Bloom podcast feature interests you.",
+          helperText: "A welcoming space to share what you've created, what inspires you, and help more people discover your work.",
+          visibleWhen: { field: "ownsBusiness", equals: true },
         },
         {
           name: "spreadTheWord",
@@ -314,8 +335,10 @@ export default function GuestRegistration({ onRegistrationComplete }: GuestRegis
             hearAboutUs: latestReg.how_heard || "",
             whyAttend: latestReg.why_attend || "",
             communityGrill: latestReg.bringing_to_grill || "",
-            giveTakeContribution: latestReg.give_take_contribution || "",
             serviceOffering: latestReg.service_offering || "",
+            ownsBusiness: latestReg.owns_business ?? null,
+            businessName: profile.business_name || "",
+            interestedInBusinessPodcast: latestReg.interested_in_business_podcast ?? null,
             spreadTheWord: latestReg.willing_to_share_social || false,
           });
           setInitialProfileImages(profile.images ?? []);

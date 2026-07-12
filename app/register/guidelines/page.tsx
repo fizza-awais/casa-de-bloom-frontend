@@ -9,7 +9,7 @@ export default function GuidelinesPage() {
       {/* Background System */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src="/assets/images/bg_image.webp"
+        src="/assets/images/bg_image_sunset_2026.webp"
           alt="Casa de Bloom Event Vibe backdrop"
           fill
           priority

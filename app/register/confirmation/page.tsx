@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState, type CSSProperties } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -24,39 +24,10 @@ import {
 import { verifyToken } from "@/lib/services/auth";
 import { formatEventDate } from "@/lib/date";
 import { downloadInvitationPdf } from "@/lib/downloadInvitationPdf";
-
-interface ConfettiPiece {
-  id: number;
-  left: number;
-  drift: number;
-  delay: number;
-  duration: number;
-  rotate: number;
-  color: string;
-  size: number;
-}
-
-const CONFETTI_COLORS = [
-  "#FF3F82",
-  "#99CC00",
-  "#33C9DC",
-  "#FFD23F",
-  "#B32B5C",
-  "#1F1B24",
-];
-
-function buildConfettiBurst(): ConfettiPiece[] {
-  return Array.from({ length: 38 }, (_, index) => ({
-    id: Date.now() + index,
-    left: 7 + Math.random() * 86,
-    drift: -95 + Math.random() * 190,
-    delay: Math.random() * 0.25,
-    duration: 1.7 + Math.random() * 1.3,
-    rotate: -260 + Math.random() * 520,
-    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
-    size: 7 + Math.random() * 7,
-  }));
-}
+import BloomCelebration, {
+  type BloomCelebrationHandle,
+} from "@/components/effects/BloomCelebration";
+import { REGISTRATION_CELEBRATION_KEY } from "@/lib/registrationCelebration";
 
 export function ConfirmationContent() {
   const params = useSearchParams();
@@ -80,22 +51,10 @@ export function ConfirmationContent() {
   const [record, setRecord] = useState<RegistrationDetail | VolunteerDetail | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(recordId));
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
+  const celebrationRef = useRef<BloomCelebrationHandle>(null);
 
   // ── Refresh guard ─────────────────────────────────────────────────────────
   const [redirecting, setRedirecting] = useState(false);
-
-  const fireConfetti = useCallback(() => {
-    const burst = buildConfettiBurst();
-    setConfetti((current) => [...current.slice(-24), ...burst]);
-    window.setTimeout(() => {
-      setConfetti((current) =>
-        current.filter(
-          (piece) => !burst.some((newPiece) => newPiece.id === piece.id)
-        )
-      );
-    }, 3400);
-  }, []);
 
   useEffect(() => {
     if (recordId) return;
@@ -119,10 +78,16 @@ export function ConfirmationContent() {
 
   useEffect(() => {
     if (!recordId || redirecting) return;
+    const shouldCelebrate =
+      window.sessionStorage.getItem(REGISTRATION_CELEBRATION_KEY) === "1";
+    if (!shouldCelebrate) return;
 
-    const timer = window.setTimeout(fireConfetti, 350);
+    const timer = window.setTimeout(
+      () => celebrationRef.current?.celebrate(),
+      350,
+    );
     return () => window.clearTimeout(timer);
-  }, [fireConfetti, recordId, redirecting]);
+  }, [recordId, redirecting]);
   // ─────────────────────────────────────────────────────────────────────────
 
   // Fetch the registration/volunteer record details when a recordId is present
@@ -214,31 +179,14 @@ export function ConfirmationContent() {
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center font-sans overflow-x-hidden px-4 py-12 md:py-16">
-      <div
-        className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
-        aria-hidden="true"
-      >
-        {confetti.map((piece) => (
-          <span
-            key={piece.id}
-            className="absolute top-0 rounded-sm opacity-90"
-            style={
-              {
-                left: `${piece.left}%`,
-                width: `${piece.size}px`,
-                height: `${piece.size * 1.45}px`,
-                backgroundColor: piece.color,
-                animation: `confetti-fall ${piece.duration}s ease-out ${piece.delay}s forwards`,
-                "--confetti-drift": `${piece.drift}px`,
-                "--confetti-rotate": `${piece.rotate}deg`,
-              } as CSSProperties
-            }
-          />
-        ))}
-      </div>
+      <BloomCelebration
+        ref={celebrationRef}
+        variant={recordType === "volunteer" ? "volunteer" : "guest"}
+        coverage="viewport"
+      />
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src="/assets/images/bg_image.webp"
+          src="/assets/images/bg_image_sunset_2026.webp"
           alt="Casa de Bloom Event Vibe backdrop"
           fill
           priority
@@ -405,7 +353,7 @@ export function ConfirmationContent() {
                 fullWidth
                 size="lg"
                 icon={<PartyPopper size={16} strokeWidth={2.5} />}
-                onClick={fireConfetti}
+                onClick={() => celebrationRef.current?.celebrate()}
               >
                 Celebrate
               </Button>

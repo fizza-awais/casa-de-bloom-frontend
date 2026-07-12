@@ -76,7 +76,7 @@ export function DonationView({ details, onContinue }: DonationViewProps) {
     <main className="relative min-h-screen w-full flex items-center justify-center font-sans overflow-x-hidden px-4 py-8 lg:py-12">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src="/assets/images/bg_image.webp"
+          src="/assets/images/bg_image_sunset_2026.webp"
           alt="Casa de Bloom Event Vibe backdrop"
           fill
           priority

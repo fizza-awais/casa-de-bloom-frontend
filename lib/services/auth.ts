@@ -29,6 +29,8 @@ export interface MemberEventRecord {
   bringing_to_grill?: string;
   give_take_contribution?: string;
   service_offering?: string;
+  owns_business?: boolean | null;
+  interested_in_business_podcast?: boolean | null;
   willing_to_share_social?: boolean;
   status?: string;
   skills_offered?: string;
