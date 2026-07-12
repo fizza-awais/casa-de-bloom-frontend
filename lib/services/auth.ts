@@ -40,6 +40,17 @@ export interface MemberEventRecord {
   event_detail?: MemberEventDetail;
 }
 
+export interface MemberConsent {
+  id: string;
+  reality_show_understood: boolean;
+  community_guidelines_accepted: boolean;
+  community_guidelines_version: string;
+  photo_video_release_accepted: boolean;
+  positive_experience_agreed: boolean;
+  age_confirmed_21_plus: boolean;
+  accepted_at: string;
+}
+
 export interface MemberProfile {
   id: string;
   cb_id: string;
@@ -58,7 +69,7 @@ export interface MemberProfile {
   exact_age: number | null;
   gender: string;
   participant_type: "guest" | "volunteer";
-  consents: unknown[];
+  consents: MemberConsent[];
   registrations: MemberEventRecord[];
   volunteer_details: MemberEventRecord[];
   donations: unknown[];

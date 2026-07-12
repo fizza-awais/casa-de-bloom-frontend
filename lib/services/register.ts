@@ -23,12 +23,12 @@ export interface RegisterPayload {
   exact_age?: number;
   gender?: string;
   event_date: string;
-  reality_show_understood: boolean;
-  community_guidelines_accepted: boolean;
-  community_guidelines_version: string;
-  photo_video_release_accepted: boolean;
-  positive_experience_agreed: boolean;
-  age_confirmed_21_plus: boolean;
+  reality_show_understood?: boolean;
+  community_guidelines_accepted?: boolean;
+  community_guidelines_version?: string;
+  photo_video_release_accepted?: boolean;
+  positive_experience_agreed?: boolean;
+  age_confirmed_21_plus?: boolean;
   special_invite?: boolean;
 
   // Guest specific fields
