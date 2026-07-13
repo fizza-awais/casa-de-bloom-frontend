@@ -6,7 +6,7 @@ const renderer = fs.readFileSync("lib/guestInvitationPdf.js", "utf8");
 const downloader = fs.readFileSync("lib/downloadInvitationPdf.ts", "utf8");
 
 test("guest artwork PDF uses one source-pixel template configuration", () => {
-  assert.match(renderer, /source: \{ width: 1024, height: 1535 \}/);
+  assert.match(renderer, /source: \{ width: 946, height: 1663 \}/);
   assert.match(renderer, /fields: \{/);
   assert.match(renderer, /invitationNumber:/);
   assert.match(renderer, /memberId:/);
@@ -25,7 +25,7 @@ test("guest artwork PDF embeds the matching local Poppins and Cormorant fonts", 
 test("guest PDF sanitizes empty values and preserves the required location fallback", () => {
   assert.match(renderer, /Details provided to registered guests/);
   assert.match(renderer, /normalizeGuestInvitationData/);
-  assert.match(renderer, /typeof value === "string" \? value\.trim\(\) : ""/);
+  assert.match(renderer, /value == null \? "" : String\(value\)\.trim\(\)/);
 });
 
 test("guest template falls back to the plain PDF and volunteer remains unchanged", () => {
@@ -35,7 +35,8 @@ test("guest template falls back to the plain PDF and volunteer remains unchanged
 
 test("text fitting measures width, wrapping, and available height", () => {
   assert.match(renderer, /wrapMeasuredText\(pdf, value, availableWidth\)/);
-  assert.match(renderer, /pdf\.getTextWidth\(line\) <= availableWidth/);
+  assert.match(renderer, /measureText\(pdf, line\) <= availableWidth/);
   assert.match(renderer, /lines\.length \* lineHeight <= availableHeight/);
+  assert.match(renderer, /splitLongWord/);
   assert.match(renderer, /singleLine: true/);
 });

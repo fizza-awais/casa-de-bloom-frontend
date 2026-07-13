@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import {
   CalendarDays,
   ChevronRight,
@@ -319,175 +320,198 @@ export default function EventTracker({
                 <X size={18} />
               </button>
 
-              <div className="flex flex-col items-stretch gap-8 md:flex-row md:gap-10">
-                <div className="flex flex-1 flex-col justify-center space-y-6">
-                  <div className="flex flex-col items-center gap-3 text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-secondary/15 shadow-inner">
-                      <CheckCircle
-                        size={36}
-                        className="text-brand-secondary"
-                        strokeWidth={2}
-                      />
+              <div className="flex flex-col gap-8">
+                <div className="flex flex-col items-stretch gap-8 md:flex-row md:gap-10">
+                  <div className="flex flex-1 flex-col justify-center space-y-6">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-secondary/15 shadow-inner">
+                        <CheckCircle
+                          size={36}
+                          className="text-brand-secondary"
+                          strokeWidth={2}
+                        />
+                      </div>
+                      <div>
+                        <h1 className="text-2xl font-extrabold tracking-tight text-ui-text-main">
+                          {modalTitle}
+                        </h1>
+                        <p className="mt-1 text-sm text-ui-text-muted">
+                          {selectedIsVolunteer ? (
+                            modalSubtitle
+                          ) : (
+                            <>
+                              This is your personal invitation,{" "}
+                              <span className="font-semibold text-brand-dark">
+                                {memberName}
+                              </span>
+                              . We&apos;re holding your place in a day designed for
+                              connection, generosity, and community.
+                            </>
+                          )}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h1 className="text-2xl font-extrabold tracking-tight text-ui-text-main">
-                        {modalTitle}
-                      </h1>
-                      <p className="mt-1 text-sm text-ui-text-muted">
-                        {selectedIsVolunteer ? (
-                          modalSubtitle
-                        ) : (
-                          <>
-                            This is your personal invitation,{" "}
-                            <span className="font-semibold text-brand-dark">
-                              {memberName}
-                            </span>
-                            . We&apos;re holding your place in a day designed for
-                            connection, generosity, and community.
-                          </>
-                        )}
+
+                    <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-brand-primary/30 bg-gradient-to-br from-brand-primary/10 to-brand-accent/10 p-5 text-center shadow-inner">
+                      <div className="flex items-center gap-2 text-brand-primary">
+                        <Ticket size={18} strokeWidth={2.5} />
+                        <span className="text-xs font-bold uppercase tracking-widest">
+                          {numberLabel}
+                        </span>
+                      </div>
+                      <p className="break-all font-mono text-3xl font-extrabold tracking-widest text-brand-dark sm:text-4xl">
+                        {selectedRegistration.invitation_number ?? "Pending"}
                       </p>
+                      <p className="text-[11px] font-medium text-ui-text-muted">
+                        Member ID:{" "}
+                        <span className="font-bold text-ui-text-main">
+                          {member.cbId}
+                        </span>
+                      </p>
+                      <div className="mt-2 inline-flex items-center justify-center rounded-full bg-brand-secondary px-5 py-3 text-sm font-extrabold text-ui-text-main shadow-sm">
+                        {checkInText}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-brand-primary/30 bg-gradient-to-br from-brand-primary/10 to-brand-accent/10 p-5 text-center shadow-inner">
-                    <div className="flex items-center gap-2 text-brand-primary">
-                      <Ticket size={18} strokeWidth={2.5} />
-                      <span className="text-xs font-bold uppercase tracking-widest">
-                        {numberLabel}
-                      </span>
+                  <div className="hidden w-px shrink-0 self-stretch bg-ui-border md:block" />
+
+                  <div className="flex flex-1 flex-col justify-between space-y-6">
+                    <div className="space-y-3 rounded-xl border border-ui-border bg-white/70 p-4">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays size={16} className="text-brand-primary" />
+                        <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
+                          Event Details
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm font-semibold text-ui-text-main">
+                            {selectedEventName}
+                          </p>
+                          <p className="mt-0.5 text-sm text-ui-text-muted">
+                            <span className="font-semibold text-ui-text-main">
+                              Date:
+                            </span>{" "}
+                            {selectedEventDate}
+                          </p>
+                          <p className="mt-1 text-sm text-ui-text-muted">
+                            <span className="font-semibold text-ui-text-main">
+                              Location:
+                            </span>{" "}
+                            {selectedEvent?.location || "Details provided to registered guests"}
+                          </p>
+                          <EventDirectionsLink
+                            href={selectedEvent?.google_maps_url}
+                            className="mt-3 w-full"
+                          />
+                        </div>
+
+                        <hr className="border-ui-border/60" />
+
+                        <div className="space-y-2 pt-1">
+                          <div className="flex items-center gap-2 text-sm text-ui-text-muted">
+                            <User size={14} className="shrink-0 text-ui-text-muted" />
+                            <p>
+                              <span className="font-semibold text-ui-text-main">
+                                Name:
+                              </span>{" "}
+                              {memberName}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-ui-text-muted">
+                            <Mail size={14} className="shrink-0 text-ui-text-muted" />
+                            <p>
+                              <span className="font-semibold text-ui-text-main">
+                                Email:
+                              </span>{" "}
+                              {member.email || "-"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-ui-text-muted">
+                            <Phone size={14} className="shrink-0 text-ui-text-muted" />
+                            <p>
+                              <span className="font-semibold text-ui-text-main">
+                                Phone:
+                              </span>{" "}
+                              {member.phone || "-"}
+                            </p>
+                          </div>
+                          {selectedIsVolunteer && (
+                            <div className="mt-3 space-y-2 rounded-2xl border border-brand-primary/15 bg-brand-light/20 p-3">
+                              <p className="text-xs font-extrabold uppercase tracking-wider text-brand-primary">
+                                Volunteer Details
+                              </p>
+                              <p className="text-sm text-ui-text-muted">
+                                <span className="font-semibold text-ui-text-main">
+                                  Availability:
+                                </span>{" "}
+                                {selectedRegistration.availability || "Not provided yet"}
+                              </p>
+                              <p className="text-sm text-ui-text-muted">
+                                <span className="font-semibold text-ui-text-main">
+                                  Contribution:
+                                </span>{" "}
+                                {selectedRegistration.skills_offered || "Not provided yet"}
+                              </p>
+                              <p className="text-sm text-ui-text-muted">
+                                <span className="font-semibold text-ui-text-main">
+                                  Photo/video help:
+                                </span>{" "}
+                                {selectedRegistration.can_capture_media ? "Yes" : "No"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <p className="break-all font-mono text-3xl font-extrabold tracking-widest text-brand-dark sm:text-4xl">
-                      {selectedRegistration.invitation_number ?? "Pending"}
-                    </p>
-                    <p className="text-[11px] font-medium text-ui-text-muted">
-                      Member ID:{" "}
-                      <span className="font-bold text-ui-text-main">
-                        {member.cbId}
-                      </span>
-                    </p>
-                    <div className="mt-2 inline-flex items-center justify-center rounded-full bg-brand-secondary px-5 py-3 text-sm font-extrabold text-ui-text-main shadow-sm">
-                      {checkInText}
+
+                    <div className="flex flex-col gap-3 pt-2">
+                      <Button
+                        variant="primary"
+                        rounded="2xl"
+                        fullWidth
+                        size="lg"
+                        icon={<Download size={16} strokeWidth={2.5} />}
+                        onClick={handleDownloadInvitation}
+                      >
+                        {downloadLabel}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        rounded="2xl"
+                        fullWidth
+                        size="lg"
+                        onClick={() => setSelectedRegistration(null)}
+                      >
+                        Close
+                      </Button>
+                      <p className="text-center text-sm font-semibold text-brand-dark">
+                        Come ready to make someone else&apos;s day a little brighter.
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="hidden w-px shrink-0 self-stretch bg-ui-border md:block" />
-
-                <div className="flex flex-1 flex-col justify-between space-y-6">
-                  <div className="space-y-3 rounded-xl border border-ui-border bg-white/70 p-4">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays size={16} className="text-brand-primary" />
-                      <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
-                        Event Details
-                      </p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-semibold text-ui-text-main">
-                          {selectedEventName}
-                        </p>
-                        <p className="mt-0.5 text-sm text-ui-text-muted">
-                          <span className="font-semibold text-ui-text-main">
-                            Date:
-                          </span>{" "}
-                          {selectedEventDate}
-                        </p>
-                        <p className="mt-1 text-sm text-ui-text-muted">
-                          <span className="font-semibold text-ui-text-main">
-                            Location:
-                          </span>{" "}
-                          {selectedEvent?.location || "Details provided to registered guests"}
-                        </p>
-                        <EventDirectionsLink
-                          href={selectedEvent?.google_maps_url}
-                          className="mt-3 w-full"
-                        />
-                      </div>
-
-                      <hr className="border-ui-border/60" />
-
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center gap-2 text-sm text-ui-text-muted">
-                          <User size={14} className="shrink-0 text-ui-text-muted" />
-                          <p>
-                            <span className="font-semibold text-ui-text-main">
-                              Name:
-                            </span>{" "}
-                            {memberName}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-ui-text-muted">
-                          <Mail size={14} className="shrink-0 text-ui-text-muted" />
-                          <p>
-                            <span className="font-semibold text-ui-text-main">
-                              Email:
-                            </span>{" "}
-                            {member.email || "-"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-ui-text-muted">
-                          <Phone size={14} className="shrink-0 text-ui-text-muted" />
-                          <p>
-                            <span className="font-semibold text-ui-text-main">
-                              Phone:
-                            </span>{" "}
-                            {member.phone || "-"}
-                          </p>
-                        </div>
-                        {selectedIsVolunteer && (
-                          <div className="mt-3 space-y-2 rounded-2xl border border-brand-primary/15 bg-brand-light/20 p-3">
-                            <p className="text-xs font-extrabold uppercase tracking-wider text-brand-primary">
-                              Volunteer Details
-                            </p>
-                            <p className="text-sm text-ui-text-muted">
-                              <span className="font-semibold text-ui-text-main">
-                                Availability:
-                              </span>{" "}
-                              {selectedRegistration.availability || "Not provided yet"}
-                            </p>
-                            <p className="text-sm text-ui-text-muted">
-                              <span className="font-semibold text-ui-text-main">
-                                Contribution:
-                              </span>{" "}
-                              {selectedRegistration.skills_offered || "Not provided yet"}
-                            </p>
-                            <p className="text-sm text-ui-text-muted">
-                              <span className="font-semibold text-ui-text-main">
-                                Photo/video help:
-                              </span>{" "}
-                              {selectedRegistration.can_capture_media ? "Yes" : "No"}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-3 pt-2">
-                    <Button
-                      variant="primary"
-                      rounded="2xl"
-                      fullWidth
-                      size="lg"
-                      icon={<Download size={16} strokeWidth={2.5} />}
-                      onClick={handleDownloadInvitation}
-                    >
-                      {downloadLabel}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      rounded="2xl"
-                      fullWidth
-                      size="lg"
-                      onClick={() => setSelectedRegistration(null)}
-                    >
-                      Close
-                    </Button>
-                    <p className="text-center text-sm font-semibold text-brand-dark">
-                      Come ready to make someone else&apos;s day a little brighter.
+                <div className="flex flex-col items-center gap-5 rounded-3xl border-2 border-dashed border-brand-secondary/35 bg-brand-secondary/5 p-5 sm:flex-row sm:p-6">
+                  <div className="flex-1 space-y-2 text-center sm:text-left">
+                    <h2 className="text-sm font-extrabold uppercase tracking-widest text-brand-secondary">
+                      Optional Donations
+                    </h2>
+                    <p className="text-sm font-medium leading-6 text-ui-text-main">
+                      Donations are welcome and completely optional. Your support helps
+                      cover event setup, cleanup, and future Casa de Bloom experiences.
                     </p>
+                  </div>
+                  <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
+                    <Image
+                      src="/assets/images/donations.webp"
+                      alt="Casa de Bloom donation QR codes"
+                      fill
+                      sizes="128px"
+                      className="object-contain p-2"
+                    />
                   </div>
                 </div>
               </div>
