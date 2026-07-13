@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Calendar,
@@ -253,6 +254,28 @@ export function ConfirmationContent() {
                 <p className="text-[12px] font-bold text-ui-text-main">
                   {checkInText}
                 </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-5 rounded-3xl border-2 border-dashed border-brand-secondary/35 bg-brand-secondary/5 p-5 sm:flex-row sm:p-6">
+              <div className="flex-1 space-y-2 text-center sm:text-left">
+                <h2 className="text-sm font-extrabold uppercase tracking-widest text-brand-secondary">
+                  Optional Donations
+                </h2>
+                <p className="text-sm font-medium leading-6 text-ui-text-main">
+                  Donations are welcome and completely optional. Your support helps
+                  cover event setup, cleanup, and future Casa de
+                  Bloom experiences.
+                </p>
+              </div>
+              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
+                <Image
+                  src="/assets/images/donations.webp"
+                  alt="Casa de Bloom donation QR codes"
+                  fill
+                  sizes="128px"
+                  className="object-contain p-2"
+                />
               </div>
             </div>
           </div>
