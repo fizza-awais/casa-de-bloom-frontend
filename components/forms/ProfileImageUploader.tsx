@@ -1,11 +1,15 @@
 "use client";
 
-import { ImagePlus, Trash2, Undo2, X } from "lucide-react";
+import {
+  ImagePlus,
+  Trash2,
+  Undo2,
+  X,
+} from "lucide-react";
 import {
   canPreviewProfileImage,
   getProfileImageExtension,
   formatProfileImageSize,
-  PROFILE_IMAGE_ACCEPT,
   PROFILE_IMAGE_FORMAT_LABEL,
   PROFILE_IMAGE_LIMIT,
   PROFILE_IMAGE_TOTAL_MAX_SIZE,
@@ -77,7 +81,7 @@ export default function ProfileImageUploader({
           Add Photos
           <input
             type="file"
-            accept={PROFILE_IMAGE_ACCEPT}
+            accept="image/*"
             multiple
             disabled={isInputDisabled}
             className="sr-only"
