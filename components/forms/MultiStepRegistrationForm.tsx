@@ -815,7 +815,12 @@ export default function MultiStepRegistrationForm({
 
   const handleSelectImages = (fileList: FileList | null) => {
     const files = Array.from(fileList ?? []);
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      setImageError(
+        "We couldn't read the selected photo(s). Please try again, or pick different photos.",
+      );
+      return;
+    }
     draftSavingPausedRef.current = false;
 
     const validationError = validateProfileImageFiles({
@@ -828,18 +833,26 @@ export default function MultiStepRegistrationForm({
       return;
     }
 
-    setImageError(null);
-    setSelectedImages((prev) => [
-      ...prev,
-      ...files.map((file) => ({
-        id:
-          typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `${file.name}-${file.lastModified}-${Math.random()}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-      })),
-    ]);
+    const newImages: typeof selectedImages = [];
+    try {
+      for (const file of files) {
+        newImages.push({
+          id:
+            typeof crypto !== "undefined" && "randomUUID" in crypto
+              ? crypto.randomUUID()
+              : `${file.name}-${file.lastModified}-${Math.random()}`,
+          file,
+          previewUrl: URL.createObjectURL(file),
+        });
+      }
+      setImageError(null);
+      setSelectedImages((prev) => [...prev, ...newImages]);
+    } catch {
+      newImages.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+      setImageError(
+        "We couldn't process the selected photo(s). Please try again, or pick different photos.",
+      );
+    }
   };
 
   const handleRemoveSelectedImage = (id: string) => {
@@ -1464,7 +1477,7 @@ export default function MultiStepRegistrationForm({
                           existingImages={initialProfileImages}
                           selectedImages={selectedImages}
                           error={imageError}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || !draftReady}
                           onSelectFiles={handleSelectImages}
                           onRemoveSelected={handleRemoveSelectedImage}
                         />

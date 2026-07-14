@@ -1,6 +1,7 @@
 export const PROFILE_IMAGE_LIMIT = 6;
 export const PROFILE_IMAGE_MAX_SIZE = 8 * 1024 * 1024;
-export const PROFILE_IMAGE_TOTAL_MAX_SIZE = 8 * 1024 * 1024;
+export const PROFILE_IMAGE_TOTAL_MAX_SIZE =
+  PROFILE_IMAGE_LIMIT * PROFILE_IMAGE_MAX_SIZE;
 export const PROFILE_IMAGE_FORMAT_LABEL =
   "JPG, JPEG, PNG, WEBP, GIF, AVIF, BMP, HEIC, HEIF, or TIFF";
 export const PROFILE_IMAGE_REQUEST_TOO_LARGE_MESSAGE =
@@ -98,6 +99,14 @@ export function canPreviewProfileImage(file: File): boolean {
   );
 }
 
+function isSameProfileImageFile(a: File, b: File): boolean {
+  return (
+    a.name === b.name &&
+    a.size === b.size &&
+    a.lastModified === b.lastModified
+  );
+}
+
 export function validateProfileImageFiles({
   files,
   currentCount,
@@ -109,6 +118,15 @@ export function validateProfileImageFiles({
 }): string | null {
   if (currentCount + files.length > PROFILE_IMAGE_LIMIT) {
     return `You can upload up to ${PROFILE_IMAGE_LIMIT} images in total.`;
+  }
+
+  const duplicate = files.find(
+    (file, index) =>
+      currentFiles.some((existing) => isSameProfileImageFile(existing, file)) ||
+      files.some((other, otherIndex) => otherIndex < index && isSameProfileImageFile(other, file))
+  );
+  if (duplicate) {
+    return `"${duplicate.name}" has already been added.`;
   }
 
   const invalidType = files.find(
